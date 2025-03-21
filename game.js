@@ -4,7 +4,7 @@ let inc = 1;
 function _update() {
     posX += inc;
 
-    if (posX >= 56) inc = -1;
+    if (posX >= 120) inc = -1;
     if (posX <= 0) inc = 1;
 }
 
@@ -15,7 +15,7 @@ function _draw() {
 }
 
 function custom_function(x) {
-   rect(x, 8, 8, 8, 2);
+   rect(x, 8, 8, 8, 0);
 }
 
 let age = 20;
