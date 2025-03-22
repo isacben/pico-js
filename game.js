@@ -15,7 +15,9 @@ function _draw() {
 }
 
 function custom_function(x) {
-   rect(x, 8, 8, 8, 0);
+   rect(0, 0, 8, 8, 2);
+   rect(9, 0, 8, 8, 0);
+   circ(23, 4, 4, 2);
 }
 
 let age = 20;

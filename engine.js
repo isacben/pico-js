@@ -12,6 +12,7 @@ const maxHeight = NATIVE_HEIGHT * maxMultiplier;
 const windowPercentage = 0.9;
 
 var canvas = document.createElement('canvas');
+canvas.id = "canvas";
 var ctx = canvas.getContext("2d");
 
 let accumulator = 0;
@@ -25,6 +26,10 @@ let cHeight = NATIVE_HEIGHT;
 ctx.canvas.width = cWidth;
 ctx.canvas.height = cHeight; 
 ctx.imageSmoothingEnabled = false;
+
+function setCanvasScalingFactor() {
+    return window.devicePixelRatio || 1;
+}
 
 function resizeCanvas() {
     cWidth = window.innerWidth;
@@ -93,7 +98,7 @@ function rect(x, y, w, h, c) {
     //x *= TILE_SIZE; y *= TILE_SIZE; w *= TILE_SIZE; h *= TILE_SIZE;
 
     ctx.beginPath();
-    ctx.lineWidth = "8";
+    //ctx.lineWidth = "2";
     ctx.strokeStyle = COLORS[c];
     ctx.rect(x, y, w, h);
     ctx.stroke();
@@ -104,6 +109,12 @@ function fillRect(x, y, w, h, c) {
     ctx.fillRect(x, y, w, h); 
 }
 
+function circ(x, y, r, c) {
+    ctx.fillStyle = COLORS[c];
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI);
+    ctx.stroke();
+}
 function print(s, x, y, c) {
     ctx.fillStyle = COLORS[c];
     ctx.fillText(s, x, y, 200);
