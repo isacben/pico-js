@@ -99,11 +99,48 @@ function fillrect(x, y, w, h, c) {
     ctx.fillRect(x, y, w, h); 
 }
 
+function drawCircle(centerX, centerY, radius, color) {
+    let x = 0;
+    let y = radius;
+    let decisionParameter = 1 - radius;
+  
+    // Plot the initial point
+    plotCirclePoints(centerX, centerY, x, y);
+  
+    while (x < y) {
+      x++;
+      if (decisionParameter < 0) {
+        decisionParameter += 2 * x + 1;
+      } else {
+        y--;
+        decisionParameter += 2 * (x - y) + 1;
+      }
+      plotCirclePoints(centerX, centerY, x, y);
+    }
+  }
+  
+  function plotCirclePoints(centerX, centerY, x, y) {
+    plotPixel(centerX + x, centerY + y);
+    plotPixel(centerX - x, centerY + y);
+    plotPixel(centerX + x, centerY - y);
+    plotPixel(centerX - x, centerY - y);
+    plotPixel(centerX + y, centerY + x);
+    plotPixel(centerX - y, centerY + x);
+    plotPixel(centerX + y, centerY - x);
+    plotPixel(centerX - y, centerY - x);
+  }
+  
+  function plotPixel(x, y) {
+    ctx.fillStyle = COLORS[12];
+    ctx.fillRect(x, y, 1, 1); // Draw a 1x1 rectangle to represent a pixel
+  }
+
 function circ(x, y, r, c) {
-    ctx.strokeStyle = COLORS[c];
-    ctx.beginPath();
-    ctx.arc(x+.5, y+.5, r, 0, 2 * Math.PI);
-    ctx.stroke();
+    //ctx.strokeStyle = COLORS[c];
+    //ctx.beginPath();
+    //ctx.arc(x+.5, y+.5, r, 0, 2 * Math.PI);
+    //ctx.stroke();
+    drawCircle(x, y, r, COLORS[c]);
 }
 function print(s, x, y, c) {
     ctx.fillStyle = COLORS[c];

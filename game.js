@@ -16,10 +16,10 @@ function _draw() {
 
 function custom_function(x) {
    rect(0, 0, 8, 8, 2);
-   fillrect(8, 0, 8, 8, 6);
-   rect(4, 8, 8, 8, 9);
+   //fillrect(8, 0, 8, 8, 6);
+   //rect(4, 8, 8, 8, 9);
    //rect(119, 0, 8, 8, 2);
-   circ(22, 4, 4, 12);
+   circ(12, 4, 4, 12);
 }
 
 let age = 20;
