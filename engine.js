@@ -99,13 +99,19 @@ function fillrect(x, y, w, h, c) {
     ctx.fillRect(x, y, w, h); 
 }
 
-function drawCircle(centerX, centerY, radius, color) {
+function drawCircle(centerX, centerY, radius, filled, color) {
     let x = 0;
     let y = radius;
     let decisionParameter = 1 - radius;
+
+    ctx.fillStyle = color;
   
     // Plot the initial point
-    plotCirclePoints(centerX, centerY, x, y);
+    if (filled) {
+      drawHorizontalLine(centerX - radius, centerX + radius, centerY);
+    } else {
+      plotCirclePoints(centerX, centerY, x, y);
+    }
   
     while (x < y) {
         x++;
@@ -115,7 +121,15 @@ function drawCircle(centerX, centerY, radius, color) {
             y--;
             decisionParameter += 2 * (x - y) + 1;
         }
-        plotCirclePoints(centerX, centerY, x, y);
+
+        if (filled) {
+          drawHorizontalLine(centerX - x, centerX + x, centerY + y);
+          drawHorizontalLine(centerX - x, centerX + x, centerY - y);
+          drawHorizontalLine(centerX - y, centerX + y, centerY + x);
+          drawHorizontalLine(centerX - y, centerX + y, centerY - x);
+        } else {
+          plotCirclePoints(centerX, centerY, x, y);
+        }
     }
 }
   
@@ -131,80 +145,21 @@ function plotCirclePoints(centerX, centerY, x, y) {
 }
   
 function plotPixel(x, y) {
-    ctx.fillStyle = COLORS[12];
-    ctx.fillRect(x, y, 1, 1); // Draw a 1x1 rectangle to represent a pixel
+    ctx.fillRect(x, y, 1, 1);
+}
+
+function drawHorizontalLine(x1, x2, y) {
+  for (let x = x1; x <= x2; x++) {
+    ctx.fillRect(x, y, 1, 1);
+  }
 }
 
 function circ(x, y, r, c) {
-    drawCircle(x, y, r, COLORS[c]);
+    drawCircle(x, y, r, false, COLORS[c]);
 }
-
-function drawFilledCircleNNNN(centerX, centerY, radius, color) {
-    let x = 0;
-    let y = radius;
-    let d = 1 - radius;
-    ctx.fillStyle = color;
-
-    function drawHorizontalLine(x1, x2, y) {
-      for (let x = x1; x <= x2; x++) {
-        ctx.fillRect(centerX + x, centerY + y, 1, 1);
-        ctx.fillRect(centerX - x, centerY + y, 1, 1);
-        ctx.fillRect(centerX + x, centerY - y, 1, 1);
-        ctx.fillRect(centerX - x, centerY - y, 1, 1);
-        //ctx.fillRect(centerX + y, centerY + x, 1, 1);
-        //ctx.fillRect(centerX - y, centerY + x, 1, 1);
-        //ctx.fillRect(centerX + y, centerY - x, 1, 1);
-        //ctx.fillRect(centerX - y, centerY - x, 1, 1);
-      }
-    }
-  
-    drawHorizontalLine(0, radius, 0); // Draw initial line for y = radius
-  
-    while (x < y) {
-      x++;
-      if (d < 0) {
-        d = d + 2 * x + 1;
-      } else {
-        y--;
-        d = d + 2 * (x - y) + 1;
-      }
-      drawHorizontalLine(0, x, y);
-    }
-}
-
-function drawFilledCircle(ctx, centerX, centerY, radius) {
-    let x = 0;
-    let y = radius;
-    let d = 1 - radius;
-  
-    // Draw the first set of points
-    drawHorizontalLine(ctx, centerX - radius, centerX + radius, centerY);
-  
-    while (x < y) {
-      if (d < 0) {
-        d = d + 2 * x + 3;
-      } else {
-        d = d + 2 * (x - y) + 5;
-        y--;
-      }
-      x++;
-  
-      // Draw lines for all octants
-      drawHorizontalLine(ctx, centerX - x, centerX + x, centerY + y);
-      drawHorizontalLine(ctx, centerX - x, centerX + x, centerY - y);
-      drawHorizontalLine(ctx, centerX - y, centerX + y, centerY + x);
-      drawHorizontalLine(ctx, centerX - y, centerX + y, centerY - x);
-    }
-  }
-  
-  function drawHorizontalLine(ctx, x1, x2, y) {
-    for (let x = x1; x <= x2; x++) {
-      ctx.fillRect(x, y, 1, 1);
-    }
-  }
 
 function circfill(x, y, r, c) {
-    drawFilledCircle(ctx, x, y, r, COLORS[c]);
+    drawCircle(x, y, r, true, COLORS[c]);
 }
 
 function print(s, x, y, c) {

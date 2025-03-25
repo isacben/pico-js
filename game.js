@@ -19,8 +19,8 @@ function custom_function(x) {
    fillrect(8, 0, 8, 8, 6);
    rect(4, 8, 8, 8, 9);
    rect(120, 0, 8, 8, 14);
-   circ(40, 10, 7, 8);
-   circfill(40, 30, 7, 14);
+   circ(40, 10, 1, 9);
+   circfill(40, 28, 1, 13);
 }
 
 let age = 20;
