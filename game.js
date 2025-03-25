@@ -21,6 +21,7 @@ function custom_function(x) {
    rect(120, 0, 8, 8, 14);
    circ(40, 10, 1, 9);
    circfill(40, 28, 1, 13);
+   line(x, 30, 40, x, 11);
 }
 
 let age = 20;

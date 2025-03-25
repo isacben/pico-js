@@ -162,6 +162,36 @@ function circfill(x, y, r, c) {
     drawCircle(x, y, r, true, COLORS[c]);
 }
 
+function drawPixel(x, y) {
+  ctx.fillRect(x, y, 1, 1);
+}
+
+function line(x0, y0, x1, y1, c) {
+  let dx = Math.abs(x1 - x0);
+  let dy = Math.abs(y1 - y0);
+  let sx = (x0 < x1) ? 1 : -1;
+  let sy = (y0 < y1) ? 1 : -1;
+  let err = (dx > dy ? dx : -dy) / 2;
+
+  ctx.fillStyle = COLORS[c];
+  
+  while (true) {
+    ctx.fillRect(x0, y0, 1, 1);
+
+    if (x0 === x1 && y0 === y1) break;
+
+    let e2 = err;
+    if (e2 > -dx) {
+      err -= dy;
+      x0 += sx;
+    }
+    if (e2 < dy) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+
 function print(s, x, y, c) {
     ctx.fillStyle = COLORS[c];
     ctx.fillText(s, x, y, 200);
