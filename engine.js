@@ -14,6 +14,291 @@ const maxWidth = NATIVE_WIDTH * maxMultiplier;
 const maxHeight = NATIVE_HEIGHT * maxMultiplier;
 const windowPercentage = 0.9;
 
+const picoState = Object.freeze({
+  GAME: 'game',
+  PAUSED: 'paused',
+  RESET: 'reset'
+});
+
+const chars = {
+  '0': [
+      [1,1,1],
+      [1,,1],
+      [1,,1],
+      [1,,1],
+      [1,1,1],
+  ],
+  '1': [
+    [1,1],
+    [,1],
+    [,1],
+    [,1],
+    [1,1,1],
+  ],
+  '2': [
+    [1,1,1],
+    [,,1],
+    [1,1,1],
+    [1],
+    [1,1,1],
+  ],
+  '3': [
+    [1,1,1],
+    [,,1],
+    [,1,1],
+    [,,1],
+    [1,1,1],
+  ],
+  '4': [
+    [1,,1],
+    [1,,1],
+    [1,1,1],
+    [,,1],
+    [,,1],
+  ],
+  '5': [
+    [1,1,1],
+    [1],
+    [1,1,1],
+    [,,1],
+    [1,1,1],
+  ],
+  '6': [
+    [1],
+    [1],
+    [1,1,1],
+    [1,,1],
+    [1,1,1],
+  ],
+  '7': [
+    [1,1,1],
+    [,,1],
+    [,,1],
+    [,,1],
+    [,,1],
+  ],
+  '8': [
+    [1,1,1],
+    [1,,1],
+    [1,1,1],
+    [1,,1],
+    [1,1,1],
+  ],
+  '9': [
+    [1,1,1],
+    [1,,1],
+    [1,1,1],
+    [,,1],
+    [,,1],
+  ],
+  'A': [
+      [1,1,1],
+      [1,,1],
+      [1,1,1],
+      [1,,1],
+      [1,,1]
+  ],
+  'B': [
+      [1,1,1],
+      [1, ,1],
+      [1,1],
+      [1,,1],
+      [1,1,1]
+  ],
+  'C': [
+    [,1,1],
+    [1],
+    [1],
+    [1],
+    [,1,1]
+  ],
+  'D': [
+    [1,1],
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [1,1,1]
+  ],
+  'E': [
+    [1,1,1],
+    [1],
+    [1,1],
+    [1],
+    [1,1,1]
+  ],
+  'F': [
+    [1,1,1],
+    [1],
+    [1,1],
+    [1],
+    [1]
+  ],
+  'G': [
+    [,1,1],
+    [1],
+    [1],
+    [1,,1],
+    [1,1,1]
+  ],
+  'H': [
+    [1,,1],
+    [1,,1],
+    [1,1,1],
+    [1,,1],
+    [1,,1]
+  ],
+  'I': [
+    [1,1,1],
+    [,1],
+    [,1],
+    [,1],
+    [1,1,1]
+  ],
+  'J': [
+    [1,1,1],
+    [,1],
+    [,1],
+    [,1],
+    [1,1]
+  ],
+  'K': [
+    [1,,1],
+    [1,,1],
+    [1,1],
+    [1,,1],
+    [1,,1]
+  ],
+  'L': [
+    [1],
+    [1],
+    [1],
+    [1],
+    [1,1,1]
+  ],
+  'M': [
+    [1,1,1],
+    [1,1,1],
+    [1,,1],
+    [1,,1],
+    [1,,1]
+  ],
+  'N': [
+    [1,1],
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [1,,1]
+  ],
+  'O': [
+    [,1,1],
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [1,1]
+  ],
+  'P': [
+    [1,1,1],
+    [1,,1],
+    [1,1,1],
+    [1],
+    [1]
+  ],
+  'Q': [
+    [,1],
+    [1,,1],
+    [1,,1],
+    [1,1],
+    [,1,1]
+  ],
+  'R': [
+    [1,1,1],
+    [1,,1],
+    [1,1],
+    [1,,1],
+    [1,,1]
+  ],
+  'S': [
+    [,1,1],
+    [1],
+    [1,1,1],
+    [,,1],
+    [1,1]
+  ],
+  'T': [
+    [1,1,1],
+    [,1],
+    [,1],
+    [,1],
+    [,1]
+  ],
+  'U': [
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [,1,1]
+  ],
+  'V': [
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [1,1,1],
+    [,1]
+  ],
+  'W': [
+    [1,,1],
+    [1,,1],
+    [1,,1],
+    [1,1,1],
+    [1,1,1]
+  ],
+  'X': [
+    [1,,1],
+    [1,,1],
+    [,1],
+    [1,,1],
+    [1,,1]
+  ],
+  'Y': [
+    [1,,1],
+    [1,,1],
+    [1,1,1],
+    [,,1],
+    [1,1,1]
+  ],
+  'Z': [
+    [1,1,1],
+    [,,1],
+    [,1],
+    [1],
+    [1,1,1]
+  ],
+  '*': [
+    [],
+    [1,,1],
+    [,1],
+    [1,,1]
+  ],
+  ' ': [
+    [,,,]
+  ],
+  '<': [
+    [,,1],
+    [,1,1],
+    [1,1,1],
+    [,1,1],
+    [,,1]
+  ],
+  '>': [
+    [1],
+    [1,1],
+    [1,1,1],
+    [1,1],
+    [1]
+  ]
+}
+let picoCurrentState = picoState.GAME;
+
 let cWidth = NATIVE_WIDTH;
 let cHeight = NATIVE_HEIGHT; 
 
@@ -69,7 +354,10 @@ function gameLoop(timestamp) {
 	accumulator += delta;
 
     while (accumulator >= FRAMES_PER_SECOND) {
-        _update();
+
+        if (picoCurrentState === picoState.GAME) {
+          _update();
+        }
         _draw();
 
         accumulator -= FRAMES_PER_SECOND;
@@ -82,7 +370,7 @@ function gameLoop(timestamp) {
 // API
 
 function cls() {
-    fillrect(0, 0, canvas.width, canvas.height, 0);
+    rectfill(0, 0, canvas.width, canvas.height, 0);
 }
 
 function rect(x, y, w, h, c) {
@@ -94,7 +382,7 @@ function rect(x, y, w, h, c) {
     ctx.strokeRect(x, y, w, h);
 }
 
-function fillrect(x, y, w, h, c) {
+function rectfill(x, y, w, h, c) {
     ctx.fillStyle = COLORS[c];
     ctx.fillRect(x, y, w, h); 
 }
@@ -192,7 +480,35 @@ function line(x0, y0, x1, y1, c) {
   }
 }
 
-function print(s, x, y, c) {
-    ctx.fillStyle = COLORS[c];
-    ctx.fillText(s, x, y, 200);
+function print(str, posX, posY, c) {
+  ctx.fillStyle = COLORS[c];
+
+  let needed = [];
+  str = str.toUpperCase();
+
+  for (let i = 0; i < str.length; i++) {
+    let char = chars[str.charAt(i)];
+    if (char) {
+        needed.push(char);
+    }
+  }
+
+  let currX = 0;
+  for (let i = 0; i < needed.length; i++) {
+    let char = needed[i];
+    let currY = 0;
+    let addX = 0;
+
+    for (let y = 0; y < char.length; y++) {
+      let row = char[y];
+      for (let x = 0; x < row.length; x++) {
+        if (row[x]) {
+          ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
+        }
+      }
+      addX = Math.max(addX, row.length);
+      currY += 1;
+    }
+    currX += 1 + addX;
+  }
 }
