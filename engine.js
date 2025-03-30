@@ -677,3 +677,23 @@ function print(str, posX, posY, c) {
     currX += 1 + addX;
   }
 }
+
+function spr(n, posX, posY) {
+  let currX = 0;
+    let char = sprites[n];
+    let currY = 0;
+    let addX = 0;
+
+    for (let y = 0; y < char.length; y++) {
+      let row = char[y];
+      for (let x = 0; x < row.length; x++) {
+        if (row[x]) {
+          ctx.fillStyle = COLORS[char[y][x]];
+          ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
+        }
+      }
+      addX = Math.max(addX, row.length);
+      currY += 1;
+    }
+    currX += 1 + addX;
+}
