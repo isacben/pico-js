@@ -35,8 +35,7 @@ function custom_function(x) {
     spr(playerAnimation[sp], 40, 80);
 }
 
-let age = 20;
-
+// Sprites
 
 const sprites = {
     0: [
