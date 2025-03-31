@@ -1,8 +1,8 @@
 # PICO-JS
 
-A tiny Javascript game engine inspired.
+A tiny Javascript game engine.
 
-## Work In Progress
+## Work In Progress :construction:
 
 ### Engine
 
