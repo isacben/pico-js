@@ -15,17 +15,18 @@ function _update() {
 function _draw() {
     cls();
     custom_function(posX);
-    print("<hello\\world>", 40, 60, 13); 
+    print("hello world!", 40, 60); 
 }
 
 function custom_function(x) {
-    //rect(0, 0, 8, 8, 2);
-    //rectfill(8, 0, 8, 8, 6);
+    rect(0, 0, 8, 8);
+    rectfill(8, 0, 8, 8);
     //rect(4, 8, 8, 8, 9);
     //rect(120, 0, 8, 8, 14);
-    //circ(40, x, 3, 9);
-    circfill(x, 28, 8, 13);
-    //line(x, 28, 40, x, 11);
+    circ(40, x, 3);
+    circfill(x, 28, 8);
+    line(x, 28, 40, x);
+    line(10, 10, 20, 30, 9);
     //rectfill(69, 50, 1, 1, 9);
     //rectfill(70, 50, 1, 1, 9);
     //rectfill(71, 50, 1, 1, 9);

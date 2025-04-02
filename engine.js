@@ -640,22 +640,22 @@ function gameLoop(timestamp) {
 // Main engine API
 
 /** Clear game screen
- *  @param {Number} [color] - Color to cover the screen with
+ *  @param {Number} [color] - Color to cover the screen with (defualt=0)
  *  @memberof Engine */
 function cls(color=0) {
     rectfill(0, 0, canvas.width, canvas.height, color);
 }
 
 /** Draw a rectangle
- *  @param {Number} x - Coordinate x of top left corner of the rectangle
- *  @param {Number} y - Coordinate y of top left corner of the rectangle
+ *  @param {Number} x - Coordinate x of the top left corner of the rectangle
+ *  @param {Number} y - Coordinate y of the top left corner of the rectangle
  *  @param {Number} w - Width of the rectangle
  *  @param {Number} h - Height of the rectangle
- *  @param {Number} c - Color of the rectangle
+ *  @param {Number} [c] - Color of the rectangle (default=6)
  * @example
- * rect(10, 10, 50, 30, 7)  // draws a white rectangle at (10,10)
+ * rect(10, 10, 50, 30, 7)  // draw a white rectangle at (10,10)
  * @memberof Engine */
-function rect(x, y, w, h, c) {
+function rect(x, y, w, h, c=6) {
     x += .5;
     y += .5;
     w -= 1;
@@ -665,20 +665,27 @@ function rect(x, y, w, h, c) {
 }
 
 /** Draw a filled rectangle
- *  @param {Number} x - Coordinate x of top left corner of the rectangle
- *  @param {Number} y - Coordinate y of top left corner of the rectangle
+ *  @param {Number} x - Coordinate x of the top left corner of the rectangle
+ *  @param {Number} y - Coordinate y of the top left corner of the rectangle
  *  @param {Number} w - Width of the rectangle
  *  @param {Number} h - Height of the rectangle
- *  @param {Number} c - Color of the rectangle
+ *  @param {Number} [c] - Color of the rectangle (default=6)
  * @example
- * rectfill(10, 10, 50, 30, 7)  // draws a white filled rectangle at (10,10)
+ * rectfill(10, 10, 50, 30, 7)  // draw a white filled rectangle at (10,10)
  * @memberof Engine */
-function rectfill(x, y, w, h, c) {
+function rectfill(x, y, w, h, c=6) {
     ctx.fillStyle = COLORS[c];
     ctx.fillRect(x, y, w, h); 
 }
 
-function drawCircle(centerX, centerY, radius, filled, color) {
+/** Helper function to draw a circle or a filled circle
+ *  @param {Number} centerX   - Coordinate x of the center of the circle
+ *  @param {Number} centerY   - Coordinate y of the center of the circle
+ *  @param {Number} radius    - Radius of the circle
+ *  @param {Number} color     - Color of the circle
+ *  @param {Boolean} [filled] - If true the circle is filled
+ * @memberof Engine */
+function drawCircle(centerX, centerY, radius, color, filled=false) {
     let x = 0;
     let y = radius;
     let decisionParameter = 1 - radius;
@@ -712,6 +719,12 @@ function drawCircle(centerX, centerY, radius, filled, color) {
     }
 }
   
+/** Helper function to plot the pixels of the circunference
+ *  @param {Number} centerX - Coordinate x of the center of the circle
+ *  @param {Number} centerY - Coordinate y of the center of the circle
+ *  @param {Number} x       - Coordinate x of the point in the circunference
+ *  @param {Number} y       - Coordinate y of the point in the circunference
+ * @memberof Engine */
 function plotCirclePoints(centerX, centerY, x, y) {
     plotPixel(centerX + x, centerY + y);
     plotPixel(centerX - x, centerY + y);
@@ -722,30 +735,64 @@ function plotCirclePoints(centerX, centerY, x, y) {
     plotPixel(centerX + y, centerY - x);
     plotPixel(centerX - y, centerY - x);
 }
-  
+ 
+/** Helper function to plot a single pixels
+ *  @param {Number} x - Coordinate x of the pixel
+ *  @param {Number} y - Coordinate y of the pixel
+ * @memberof Engine */
 function plotPixel(x, y) {
     ctx.fillRect(x, y, 1, 1);
 }
 
+/** Helper function to plot a horizontal line to draw a filled circle
+ *  @param {Number} x1  - Coordinate x of the left side of the horizontal line
+ *  @param {Number} x2  - Coordinate x of the right side of the horizontal line
+ *  @param {Number} y   - Coordinate y of the horizontal line
+ * @memberof Engine */
 function drawHorizontalLine(x1, x2, y) {
   for (let x = x1; x <= x2; x++) {
     ctx.fillRect(x, y, 1, 1);
   }
 }
 
-function circ(x, y, r, c) {
-    drawCircle(x, y, r, false, COLORS[c]);
+/** Draw a circle
+ *  @param {Number} x   - Coordinate x of the center of the circle
+ *  @param {Number} y   - Coordinate y of the center of the circle
+ *  @param {Number} r   - Radius of the circle
+ *  @param {Number} [c] - Color of the circle (default=6)
+ * @example
+ * circ(10, 10, 5, 7)  // draw a white circle with center at (10,10)
+ * @memberof Engine */
+function circ(x, y, r, c=6) {
+    drawCircle(x, y, r, COLORS[c]);
 }
 
-function circfill(x, y, r, c) {
-    drawCircle(x, y, r, true, COLORS[c]);
+/** Draw a filled circle
+ *  @param {Number} x   - Coordinate x of the center of the circle
+ *  @param {Number} y   - Coordinate y of the center of the circle
+ *  @param {Number} r   - Radius of the circle
+ *  @param {Number} [c] - Color of the circle (defualt=6)
+ * @example
+ * circfill(10, 10, 5, 7)  // draw a white filled circle with center at (10,10)
+ * @memberof Engine */
+function circfill(x, y, r, c=6) {
+    drawCircle(x, y, r, COLORS[c], true);
 }
 
-function drawPixel(x, y) {
-  ctx.fillRect(x, y, 1, 1);
-}
+//function drawPixel(x, y) {
+//  ctx.fillRect(x, y, 1, 1);
+//}
 
-function line(x0, y0, x1, y1, c) {
+/** Draw a line
+ *  @param {Number} x0  - Coordinate x of the left side of the line
+ *  @param {Number} y0  - Coordinate y of the left side of the line
+ *  @param {Number} x1  - Coordinate x of the right side of the line
+ *  @param {Number} y1  - Coordinate y of the right side of the line
+ *  @param {Number} [c]   - Color of the line (default=6)
+ * @example
+ * line(10, 10, 20, 20, 7)  // draw a white line
+ * @memberof Engine */
+function line(x0, y0, x1, y1, c=6) {
   let dx = Math.abs(x1 - x0);
   let dy = Math.abs(y1 - y0);
   let sx = (x0 < x1) ? 1 : -1;
@@ -771,7 +818,15 @@ function line(x0, y0, x1, y1, c) {
   }
 }
 
-function print(str, posX, posY, c) {
+/** Print a string on the screen
+ *  @param {String} str   - String to print
+ *  @param {Number} posX  - Coordinate x of the string on the screen
+ *  @param {Number} posY  - Coordinate y of the string on the scree
+ *  @param {Number} [c]   - Color of the line (default=6)
+ * @example
+ * print("hello world", 10, 20, 7) // print the text "hello world"
+ * @memberof Engine */
+function print(str, posX, posY, c=6) {
   ctx.fillStyle = COLORS[c];
 
   let needed = [];
@@ -804,6 +859,13 @@ function print(str, posX, posY, c) {
   }
 }
 
+/** Draw a sprite on the screen
+ *  @param {Number} n - Index of the sprite
+ *  @param {Number} x  - Coordinate x of the sprite on the screen
+ *  @param {Number} y  - Coordinate y of the sprite on the scree
+ * @example
+ * spr(0, 10, 20) // draw sprite 0 at position (10,20)
+ * @memberof Engine */
 function spr(n, x, y) {
   const sprite = sprites[n];
   let currY = 0;
