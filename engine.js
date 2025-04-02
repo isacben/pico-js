@@ -1,26 +1,108 @@
+/** 
+ * PICO-JS - A tiny JavaScript Game Engine
+ * MIT License - Copyright 2025 Isaac Benitez
+ * 
+ * Engine Features
+ * @namespace Engine
+ */
+
+'use strict';
+
+/** Name of the engine
+ *  @type {String}
+ *  @default
+ *  @memberof Engine */
+const engineName = 'PICO-JS';
+
+/** Version of engine
+ *  @type {String}
+ *  @default
+ *  @memberof Engine */
+const engineVersion = '0.1.0';
+
+/** Array containing the engine colors
+ *  @type {Array}
+ *  @memberof Engine */
 const COLORS = [
     "#000000", "#1D2B53", "#7E2553", "#008751", 
     "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
     "#FF004D", "#FFA300", "#FFEC27", "#00E436",
     "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
+
+/** Frames per second to update the game
+ * @type {Number}
+ * @default 1000/60
+ * @memberof Engine */
 const FRAMES_PER_SECOND = 1000 / 60;
+
+/** Browser window marging
+ * @type {Number}
+ * @default 50
+ * @memberof Engine */
 const WINDOW_MARGIN = 50;
+
+/** Size of the tiles
+ * @type {Number}
+ * @default 8
+ * @memberof Engine */
 const TILE_SIZE = 8;
+
+/** The native game canvas width size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Engine */
 const NATIVE_WIDTH = TILE_SIZE * 16;
+
+/** The native game canvas height size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Engine */
 const NATIVE_HEIGHT = TILE_SIZE * 16;
 
+/** Max multiplier to control the size of the main canvas
+ * @type {Number}
+ * @default 10
+ * @memberof Engine */
 const maxMultiplier = 10;
+
+/** Max virtual width of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof Engine */
 const maxWidth = NATIVE_WIDTH * maxMultiplier;
+
+/** Max virtual height of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof Engine */
 const maxHeight = NATIVE_HEIGHT * maxMultiplier;
+
+/** Value to adjust the virtual size of the canvas in the window
+ * @type {Number}
+ * @default 0.9
+ * @memberof Engine */
 const windowPercentage = 0.9;
 
-const picoState = Object.freeze({
+/** Main engine state machine
+ * @type {Object}
+ * @default
+ * @memberof Engine */
+const engineState = Object.freeze({
   GAME: 'game',
   PAUSED: 'paused',
   RESET: 'reset'
 });
 
-const chars = {
+/** Engine current state of the engine state machine
+ * @type {String}
+ * @default
+ * @memberof Engine */
+let engineCurrentState = engineState.GAME;
+
+/** Array containing the engine supported characters
+ *  @type {Array}
+ *  @memberof Engine */
+const engineChars = {
   '!': [
     [,1],
     [,1],
@@ -462,17 +544,34 @@ const chars = {
     [,,,]
   ],
 }
-let picoCurrentState = picoState.GAME;
 
+/** Canvas virtual width
+ * @type {Number}
+ * @default
+ * @memberof Engine */
 let cWidth = NATIVE_WIDTH;
+
+/** Canvas virtual height
+ * @type {Number}
+ * @default
+ * @memberof Engine */
 let cHeight = NATIVE_HEIGHT; 
 
 let accumulator = 0;
 let previousTime = performance.now();
 
+/** Main Canvas
+ * @type {HTMLElement}
+ * @default
+ * @memberof Engine */
 const canvas = document.getElementById('can');
+
 const ctx = canvas.getContext("2d");
 
+/** Device pixel ratio
+ * @type {Number}
+ * @default
+ * @memberof Engine */
 const ratio = window.devicePixelRatio || 1;
 
 canvas.width = cWidth * ratio;
@@ -481,6 +580,8 @@ ctx.imageSmoothingEnabled = false;
 
 ctx.scale(ratio,ratio);
 
+/** Resize main canvas based on the browser window size
+ *  @memberof Engine */
 function resizeCanvas() {
     cWidth = window.innerWidth;
     cHeight = window.innerHeight;
@@ -514,30 +615,46 @@ resizeCanvas();
 
 window.requestAnimationFrame(gameLoop);
 
+/** Main engine game loop
+ *  @param {Number} timestamp - Timestamp when the game loop starts 
+ *  @memberof Engine */
 function gameLoop(timestamp) {
-    const delta = timestamp - previousTime;
+  const delta = timestamp - previousTime;
 	accumulator += delta;
 
-    while (accumulator >= FRAMES_PER_SECOND) {
+  while (accumulator >= FRAMES_PER_SECOND) {
 
-        if (picoCurrentState === picoState.GAME) {
-          _update();
-        }
-        _draw();
+      if (engineCurrentState === engineState.GAME) {
+        _update();
+      }
+      _draw();
 
-        accumulator -= FRAMES_PER_SECOND;
-    }
+      accumulator -= FRAMES_PER_SECOND;
+  }
 
-    previousTime = timestamp;
-    window.requestAnimationFrame(gameLoop);
+  previousTime = timestamp;
+  window.requestAnimationFrame(gameLoop);
 }
 
-// API
+////////////////////////////////////////////////////////////////////////////////
+// Main engine API
 
-function cls() {
-    rectfill(0, 0, canvas.width, canvas.height, 0);
+/** Clear game screen
+ *  @param {Number} [color] - Color to cover the screen with
+ *  @memberof Engine */
+function cls(color=0) {
+    rectfill(0, 0, canvas.width, canvas.height, color);
 }
 
+/** Draw a rectangle
+ *  @param {Number} x - Coordinate x of top left corner of the rectangle
+ *  @param {Number} y - Coordinate y of top left corner of the rectangle
+ *  @param {Number} w - Width of the rectangle
+ *  @param {Number} h - Height of the rectangle
+ *  @param {Number} c - Color of the rectangle
+ * @example
+ * rect(10, 10, 50, 30, 7)  // draws a white rectangle at (10,10)
+ * @memberof Engine */
 function rect(x, y, w, h, c) {
     x += .5;
     y += .5;
@@ -547,6 +664,15 @@ function rect(x, y, w, h, c) {
     ctx.strokeRect(x, y, w, h);
 }
 
+/** Draw a filled rectangle
+ *  @param {Number} x - Coordinate x of top left corner of the rectangle
+ *  @param {Number} y - Coordinate y of top left corner of the rectangle
+ *  @param {Number} w - Width of the rectangle
+ *  @param {Number} h - Height of the rectangle
+ *  @param {Number} c - Color of the rectangle
+ * @example
+ * rectfill(10, 10, 50, 30, 7)  // draws a white filled rectangle at (10,10)
+ * @memberof Engine */
 function rectfill(x, y, w, h, c) {
     ctx.fillStyle = COLORS[c];
     ctx.fillRect(x, y, w, h); 
@@ -652,7 +778,7 @@ function print(str, posX, posY, c) {
   str = str.toUpperCase();
 
   for (let i = 0; i < str.length; i++) {
-    let char = chars[str.charAt(i)];
+    let char = engineChars[str.charAt(i)];
     if (char) {
         needed.push(char);
     }
