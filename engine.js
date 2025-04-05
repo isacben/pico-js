@@ -24,10 +24,10 @@ const engineVersion = '0.1.0';
  *  @type {Array}
  *  @memberof Engine */
 const COLORS = [
-    "#000000", "#1D2B53", "#7E2553", "#008751", 
-    "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
-    "#FF004D", "#FFA300", "#FFEC27", "#00E436",
-    "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
+  "#000000", "#1D2B53", "#7E2553", "#008751", 
+  "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
+  "#FF004D", "#FFA300", "#FFEC27", "#00E436",
+  "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
 
 /** Frames per second to update the game
  * @type {Number}
@@ -93,11 +93,30 @@ const engineState = Object.freeze({
   RESET: 'reset'
 });
 
+/** Array of the available buttons in the engine
+ * - 0: left
+ * - 1: right
+ * - 2: up
+ * - 3: down
+ * - 4: z
+ * - 5: x
+ *  @type {Array<Boolean>}
+ *  @memberof Engine */
+const buttons = [
+  false, false, false, false,
+  false, false
+];
+
 /** Engine current state of the engine state machine
  * @type {String}
  * @default
  * @memberof Engine */
 let engineCurrentState = engineState.GAME;
+
+/** Prevents input continuing to the default browser handling (false by default)
+ *  @type {Boolean}
+ *  @memberof Engine */
+let preventDefaultInput = false;
 
 /** Array containing the engine supported characters
  *  @type {Array}
@@ -882,3 +901,59 @@ function spr(n, x, y) {
     currY += 1;
   }
 }
+
+/** Get button state
+ * - b=0: left
+ * - b=1: right
+ * - b=2: up
+ * - b=3: down
+ * - b=4: z
+ * - b=5: x
+ *  @param {Number} b - Id of the button
+ * @example
+ * btn(5) // returns true when `x` is press
+e* @memberof Engine */
+function btn(b) {
+  if (buttons[b]) return true;
+  return false;
+}
+
+
+
+document.addEventListener('keydown', (event) => {
+  if (!event.repeat) {
+    switch (event.key) {
+      case "ArrowLeft":
+        buttons[0] = true;
+        break;
+      case "ArrowRight":
+        buttons[1] = true;
+        break;
+      case "ArrowUp":
+        buttons[2] = true;
+        break;
+      case "ArrowDown":
+        buttons[3] = true;
+        break;
+    }
+  }
+
+  preventDefaultInput && e.preventDefault();
+});
+
+document.addEventListener('keyup', (event) => {
+  switch (event.key) {
+    case "ArrowLeft":
+      buttons[0] = false;
+      break;
+    case "ArrowRight":
+      buttons[1] = false;
+      break;
+    case "ArrowUp":
+      buttons[2] = false;
+      break;
+    case "ArrowDown":
+      buttons[3] = false;
+      break;
+  }
+});
