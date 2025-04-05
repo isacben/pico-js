@@ -84,14 +84,14 @@ const maxHeight = NATIVE_HEIGHT * maxMultiplier;
 const windowPercentage = 0.9;
 
 /** Main engine state machine
- * @type {Object}
- * @default
+ * @type {{PLAYING: string, PAUSED: string, RESET: string}}
  * @memberof Engine */
-const engineState = Object.freeze({
-  GAME: 'game',
+const engineState = {
+  PLAYING: 'playing',
   PAUSED: 'paused',
+  MENU: 'menu',
   RESET: 'reset'
-});
+};
 
 /** Array of the available buttons in the engine
  * - 0: left
@@ -111,7 +111,7 @@ const buttons = [
  * @type {String}
  * @default
  * @memberof Engine */
-let engineCurrentState = engineState.GAME;
+let engineCurrentState = engineState.PLAYING;
 
 /** Prevents input continuing to the default browser handling (false by default)
  *  @type {Boolean}
@@ -643,7 +643,7 @@ function gameLoop(timestamp) {
 
   while (accumulator >= FRAMES_PER_SECOND) {
 
-      if (engineCurrentState === engineState.GAME) {
+      if (engineCurrentState === engineState.PLAYING) {
         _update();
       }
       _draw();
