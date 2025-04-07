@@ -122,6 +122,13 @@ let preventDefaultInput = false;
  *  @type {Array}
  *  @memberof Engine */
 const engineChars = {
+  '~': [
+    [1],
+    [1,1],
+    [1,1,1],
+    [1,1],
+    [1]
+  ],
   '!': [
     [,1],
     [,1],
@@ -627,6 +634,7 @@ function resizeCanvas() {
     ctx.canvas.style.height = `${cHeight}px`;
 
     _draw();
+    if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
 }
 
 window.addEventListener('resize', resizeCanvas);
@@ -641,13 +649,20 @@ function gameLoop(timestamp) {
   const delta = timestamp - previousTime;
 	accumulator += delta;
 
+  console.log(engineCurrentState);
+
   while (accumulator >= FRAMES_PER_SECOND) {
 
-      if (engineCurrentState === engineState.PLAYING) {
-        _update();
+      switch (engineCurrentState) {
+        case engineState.PLAYING:
+          _update();
+          _draw();
+          break;
+        case engineState.PAUSED:
+          _draw();
+          drawEngineMenu();
+          break;
       }
-      _draw();
-
       accumulator -= FRAMES_PER_SECOND;
   }
 
@@ -902,6 +917,68 @@ function spr(n, x, y) {
   }
 }
 
+/** Main engine state machine
+ * @type {{DISABLED: string, MAIN: string, OPTIONS: string}}
+ * @memberof Engine */
+const menuState = {
+  DISABLED: 'disabled',
+  MAIN: 'main',
+  OPTIONS: 'options',
+};
+
+/** Main menu items
+ * @type {Array<string>}
+ * @memberof Engine */
+let menuItems = [];
+
+/** Current engine menu state
+ * @type {{state: string, index: Number}}
+ * @memberof Engine */
+let currentMenuState = {
+  state: menuState.DISABLED,
+  index: 0
+}
+
+/** Handle engine main menu
+ * @memberof Engine */
+function handleMenu() {
+  console.log("pressed enter")
+  switch (currentMenuState.state) {
+    case menuState.DISABLED:
+      engineCurrentState = engineState.PAUSED;
+      currentMenuState.state = menuState.MAIN;
+      menuItems = ['continue', 'options', 'reset'];
+      break;
+    case menuState.MAIN:
+      if (currentMenuState.index === 0) {
+        currentMenuState.state = menuState.DISABLED;
+        engineCurrentState = engineState.PLAYING;
+      }
+      break;
+  }
+}
+
+/** Draw engine menu
+ * @memberof Engine */
+function drawEngineMenu() {
+  rectfill(31, 43, 64, 40, 0);
+  rect(31, 43, 64, 40, 7);
+
+  if (btn(3)) {
+    currentMenuState.index += 1;
+    if (currentMenuState.index >= menuItems.length)
+      currentMenuState.index = 0;
+  }
+
+  print('~', 36, 50 + currentMenuState.index * 8, 7);
+  let y = 0;
+  menuItems.forEach(item => {
+    print(item, 42, 50 + y * 8, 7);
+    y += 1;
+  });
+
+}
+
 /** Get button state
  * - b=0: left
  * - b=1: right
@@ -918,8 +995,6 @@ function btn(b) {
   return false;
 }
 
-
-
 document.addEventListener('keydown', (event) => {
   if (!event.repeat) {
     switch (event.key) {
@@ -934,6 +1009,9 @@ document.addEventListener('keydown', (event) => {
         break;
       case "ArrowDown":
         buttons[3] = true;
+        break;
+      case "Enter":
+        handleMenu();
         break;
     }
   }
