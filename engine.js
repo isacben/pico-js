@@ -649,8 +649,6 @@ function gameLoop(timestamp) {
   const delta = timestamp - previousTime;
 	accumulator += delta;
 
-  console.log(engineCurrentState);
-
   while (accumulator >= FRAMES_PER_SECOND) {
 
       switch (engineCurrentState) {
@@ -942,7 +940,6 @@ let currentMenuState = {
 /** Handle engine main menu
  * @memberof Engine */
 function handleMenu() {
-  console.log("pressed enter")
   switch (currentMenuState.state) {
     case menuState.DISABLED:
       engineCurrentState = engineState.PAUSED;
@@ -964,12 +961,6 @@ function drawEngineMenu() {
   rectfill(31, 43, 64, 40, 0);
   rect(31, 43, 64, 40, 7);
 
-  if (btn(3)) {
-    currentMenuState.index += 1;
-    if (currentMenuState.index >= menuItems.length)
-      currentMenuState.index = 0;
-  }
-
   print('~', 36, 50 + currentMenuState.index * 8, 7);
   let y = 0;
   menuItems.forEach(item => {
@@ -977,6 +968,12 @@ function drawEngineMenu() {
     y += 1;
   });
 
+  // arrow down
+  if (btnp(3)) {
+    currentMenuState.index += 1;
+    if (currentMenuState.index >= menuItems.length)
+      currentMenuState.index = 0;
+  }
 }
 
 /** Get button state
@@ -992,6 +989,34 @@ function drawEngineMenu() {
 e* @memberof Engine */
 function btn(b) {
   if (buttons[b]) return true;
+  return false;
+}
+
+let pressedBtnCounter = [0, 0, 0, 0, 0];
+
+/** Get button state 
+ * 
+ * - b=0: left
+ * - b=1: right
+ * - b=2: up
+ * - b=3: down
+ * - b=4: z
+ * - b=5: x
+ * @param {Number} b 
+ * @returns 
+ */
+function btnp(b) {
+  if (buttons[b]) {
+    // Every time the button is pressed increment the counter.
+    pressedBtnCounter[b] += 1;
+
+    // Return true only the first time the button is pressed (the counter is 1)
+    if (pressedBtnCounter[b] === 1) return true;
+    
+    // If the button is still pressed, but the counter reached 30 fps, reset the counter
+    if (pressedBtnCounter[b] >= 30) pressedBtnCounter[b] = 0;
+  }
+
   return false;
 }
 
@@ -1016,22 +1041,26 @@ document.addEventListener('keydown', (event) => {
     }
   }
 
-  preventDefaultInput && e.preventDefault();
+  preventDefaultInput && event.preventDefault();
 });
 
 document.addEventListener('keyup', (event) => {
   switch (event.key) {
     case "ArrowLeft":
       buttons[0] = false;
+      pressedBtnCounter[0] = 0;
       break;
     case "ArrowRight":
       buttons[1] = false;
+      pressedBtnCounter[1] = 0;
       break;
     case "ArrowUp":
       buttons[2] = false;
+      pressedBtnCounter[2] = 0;
       break;
     case "ArrowDown":
       buttons[3] = false;
+      pressedBtnCounter[3] = 0;
       break;
   }
 });
