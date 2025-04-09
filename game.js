@@ -13,11 +13,11 @@ function _update() {
     if (posX >= 120) inc = -1;
     if (posX <= 0) inc = 1;
 
-    if (btnp(0)) {
+    if (btn(0)) {
         playerX -= 1;
     }
 
-    if (btnp(1)) {
+    if (btn(1)) {
         playerX += 1;
     }
 
