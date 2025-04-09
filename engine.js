@@ -24,10 +24,10 @@ const engineVersion = '0.1.0';
  *  @type {Array}
  *  @memberof Engine */
 const COLORS = [
-    "#000000", "#1D2B53", "#7E2553", "#008751", 
-    "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
-    "#FF004D", "#FFA300", "#FFEC27", "#00E436",
-    "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
+  "#000000", "#1D2B53", "#7E2553", "#008751", 
+  "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
+  "#FF004D", "#FFA300", "#FFEC27", "#00E436",
+  "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
 
 /** Frames per second to update the game
  * @type {Number}
@@ -84,25 +84,56 @@ const maxHeight = NATIVE_HEIGHT * maxMultiplier;
 const windowPercentage = 0.9;
 
 /** Main engine state machine
- * @type {Object}
- * @default
+ * @type {{PLAYING: string, PAUSED: string, RESET: string}}
  * @memberof Engine */
-const engineState = Object.freeze({
-  GAME: 'game',
+const engineState = {
+  PLAYING: 'playing',
   PAUSED: 'paused',
+  MENU: 'menu',
   RESET: 'reset'
-});
+};
+
+/** Array of the available buttons in the engine
+ * - 0: left
+ * - 1: right
+ * - 2: up
+ * - 3: down
+ * - 4: z
+ * - 5: x
+ * @type {Array<Boolean>}
+ * @memberof Engine */
+const buttons = [
+  false, false, false, false,
+  false, false
+];
+
+/** Array to keep track of the number of frames that have passed when a button remains pressed
+ * @type {Array<Number>}
+ * @memberof Engine */
+let pressedBtnCounter = [0, 0, 0, 0, 0];
 
 /** Engine current state of the engine state machine
  * @type {String}
  * @default
  * @memberof Engine */
-let engineCurrentState = engineState.GAME;
+let engineCurrentState = engineState.PLAYING;
+
+/** Prevents input continuing to the default browser handling (false by default)
+ *  @type {Boolean}
+ *  @memberof Engine */
+let preventDefaultInput = false;
 
 /** Array containing the engine supported characters
  *  @type {Array}
  *  @memberof Engine */
 const engineChars = {
+  '~': [
+    [1],
+    [1,1],
+    [1,1,1],
+    [1,1],
+    [1]
+  ],
   '!': [
     [,1],
     [,1],
@@ -608,6 +639,7 @@ function resizeCanvas() {
     ctx.canvas.style.height = `${cHeight}px`;
 
     _draw();
+    if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
 }
 
 window.addEventListener('resize', resizeCanvas);
@@ -624,11 +656,16 @@ function gameLoop(timestamp) {
 
   while (accumulator >= FRAMES_PER_SECOND) {
 
-      if (engineCurrentState === engineState.GAME) {
-        _update();
+      switch (engineCurrentState) {
+        case engineState.PLAYING:
+          _update();
+          _draw();
+          break;
+        case engineState.PAUSED:
+          _draw();
+          drawEngineMenu();
+          break;
       }
-      _draw();
-
       accumulator -= FRAMES_PER_SECOND;
   }
 
@@ -882,3 +919,232 @@ function spr(n, x, y) {
     currY += 1;
   }
 }
+
+/** Main engine state machine
+ * @type {{DISABLED: string, MAIN: string, OPTIONS: string}}
+ * @memberof Engine */
+const menuState = {
+  DISABLED: 'disabled',
+  MAIN: 'main',
+  OPTIONS: 'options',
+};
+
+/** Main menu items
+ * @type {Array<string>}
+ * @memberof Engine */
+let menuItems = [];
+
+/** Current engine menu state
+ * @type {{state: string, index: Number}}
+ * @memberof Engine */
+let currentMenuState = {
+  state: menuState.DISABLED,
+  index: 0
+}
+
+/** Engine volume
+ * @type {Number}
+ * @default 4
+ * @memberof Engine
+ */
+let volume = 4;
+
+/** Engine sound control 
+ * @type {Boolean}
+ * @default true 
+ * @memberof Engine
+ */
+let soundOn = true;
+
+function printVolume() {
+  return "0".repeat(volume) + "-".repeat(8-volume);
+}
+
+/** Handle engine main menu
+ * @memberof Engine */
+function handleMenu() {
+  switch (currentMenuState.state) {
+    case menuState.DISABLED:
+      engineCurrentState = engineState.PAUSED;
+      currentMenuState.state = menuState.MAIN;
+      menuItems = ['continue', 'options', 'reset game'];
+      break;
+    case menuState.MAIN:
+      switch (currentMenuState.index) {
+        case 0: // select 'continue'
+          currentMenuState.state = menuState.DISABLED;
+          engineCurrentState = engineState.PLAYING;
+          break;
+        case 1: // select 'options'
+          currentMenuState.state = menuState.OPTIONS
+          currentMenuState.index = 0;
+          menuItems = [soundOn ? 'sound: on':'sound: off', `volume: ${printVolume()}`, 'back'];
+          break;
+      }
+      break;
+    case menuState.OPTIONS:
+      switch (currentMenuState.index) {
+        case 0: // enable/disable sound
+          soundOn = !soundOn;
+          menuItems[0] = soundOn ? "sound: on" : "sound: off";
+          break;
+        case 2: // select go back
+          currentMenuState.state = menuState.MAIN;
+          currentMenuState.index = 0;
+          menuItems = ['continue', 'options', 'reset game'];
+          break;
+      }
+      break;
+  }
+}
+
+/** Draw engine menu
+ * @memberof Engine */
+function drawEngineMenu() {
+  rectfill(23, 43, 80, 36, 0);
+  rect(23, 43, 80, 36, 7);
+
+  // print the menu arrow icon (>)
+  print('~', 27, 50 + currentMenuState.index * 8, 7);
+
+  // print the menu items
+  let y = 0;
+  menuItems.forEach(item => {
+    // push the selected menu forward
+    let x = 0;
+    if (currentMenuState.index === y) x = 1;
+
+    // print the menu item
+    print(item, 32 + x, 50 + y * 8, 7);
+    y += 1;
+  });
+
+  // arrow up 
+  if (btnp(2)) {
+    currentMenuState.index -= 1;
+    if (currentMenuState.index < 0)
+      currentMenuState.index = menuItems.length - 1;
+  }
+  
+  // arrow down
+  if (btnp(3)) {
+    currentMenuState.index += 1;
+    if (currentMenuState.index >= menuItems.length)
+      currentMenuState.index = 0;
+  }
+
+  // left and right keys for volume control
+  if (currentMenuState.state === menuState.OPTIONS &&
+    currentMenuState.index === 1) {
+    if (btnp(0))
+      volume = Math.max(0, volume - 1);
+    if (btnp(1))
+      volume = Math.min(8, volume + 1);
+    menuItems[1] =`volume: ${printVolume()}`;
+  }
+}
+
+/** Get button state. Returns true when a button is pressed
+ * - b=0: left
+ * - b=1: right
+ * - b=2: up
+ * - b=3: down
+ * - b=4: z
+ * - b=5: x
+ * @param {Number} b - Number of the button pressed
+ * @returns {Boolean}
+ * @example
+ * btn(5) // returns true when `x` is pressed
+ * @memberof Engine */
+function btn(b) {
+  if (buttons[b]) return true;
+  return false;
+}
+
+/** Returns true when a button is down and it was not down the last frame
+ * 
+ * It also returns true every 8 frames it held
+ * - b=0: left
+ * - b=1: right
+ * - b=2: up
+ * - b=3: down
+ * - b=4: z
+ * - b=5: x
+ * @param {Number} b - Number of the button pressed
+ * @returns {Boolean}
+ * @example
+ * btnp(5) // returns true when `x` is pressed
+ * @memberof Engine */
+function btnp(b) {
+  if (buttons[b]) {
+    // Every time the button is pressed increment the counter.
+    pressedBtnCounter[b] += 1;
+
+    // Return true only the first time the button is pressed (the counter is 1)
+    if (pressedBtnCounter[b] === 1) return true;
+    
+    // If the button is still pressed, but the counter reached 30 fps, reset the counter
+    if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
+  }
+
+  return false;
+}
+
+document.addEventListener('keydown', (event) => {
+  if (!event.repeat) {
+    switch (event.code) {
+      case "ArrowLeft":
+        buttons[0] = true;
+        break;
+      case "ArrowRight":
+        buttons[1] = true;
+        break;
+      case "ArrowUp":
+        buttons[2] = true;
+        break;
+      case "ArrowDown":
+        buttons[3] = true;
+        break;
+      case "KeyZ":
+        buttons[4] = true;
+        break;
+      case "KeyX":
+        buttons[5] = true;
+        break;
+      case "Enter":
+        handleMenu();
+        break;
+    }
+  }
+
+  preventDefaultInput && event.preventDefault();
+});
+
+document.addEventListener('keyup', (event) => {
+  switch (event.code) {
+    case "ArrowLeft":
+      buttons[0] = false;
+      pressedBtnCounter[0] = 0;
+      break;
+    case "ArrowRight":
+      buttons[1] = false;
+      pressedBtnCounter[1] = 0;
+      break;
+    case "ArrowUp":
+      buttons[2] = false;
+      pressedBtnCounter[2] = 0;
+      break;
+    case "ArrowDown":
+      buttons[3] = false;
+      pressedBtnCounter[3] = 0;
+      break;
+    case "KeyZ":
+      buttons[4] = false;
+      pressedBtnCounter[4] = 0;
+      break;
+    case "KeyX":
+      buttons[5] = false;
+      pressedBtnCounter[5] = 0;
+      break;
+  }
+});
