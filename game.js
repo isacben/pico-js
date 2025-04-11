@@ -40,7 +40,7 @@ function custom_function(x) {
     rect(0, 0, 8, 8);
     rectfill(8, 0, 8, 8);
     circ(40, x, 3);
-    circfill(x, 28, 8);
+    circfill(x, 28, 8, 4);
     line(x, 28, 40, x);
     line(10, 10, 20, 30, 9);
     const sp = Math.floor(T / 28) % playerAnimation.length;
