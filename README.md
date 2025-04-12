@@ -40,3 +40,9 @@ function _draw() {
   circfill(posX, 60, 8, 4);
 }
 ```
+
+## Builds
+
+- [pico-js.release.js](https://github.com/isacben/pico-js/blob/main/dist/pico-js.release.js)
+
+To rebuild the engine, call `npm run build`

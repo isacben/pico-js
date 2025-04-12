@@ -84,7 +84,7 @@ const maxHeight = NATIVE_HEIGHT * maxMultiplier;
 const windowPercentage = 0.9;
 
 /** Main engine state machine
- * @type {{PLAYING: string, PAUSED: string, RESET: string}}
+ * @type {{PLAYING: string, PAUSED: string, MENU: string, RESET: string}}
  * @memberof Engine */
 const engineState = {
   PLAYING: 'playing',
@@ -124,7 +124,7 @@ let engineCurrentState = engineState.PLAYING;
 let preventDefaultInput = false;
 
 /** Array containing the engine supported characters
- *  @type {Array}
+ *  @type {{[key: string]: number[][]}}
  *  @memberof Engine */
 const engineChars = {
   '~': [
@@ -592,11 +592,20 @@ let accumulator = 0;
 let previousTime = performance.now();
 
 /** Main Canvas
- * @type {HTMLElement}
- * @default
+ * @type {HTMLCanvasElement}
  * @memberof Engine */
-const canvas = document.getElementById('can');
+let canvas;
+canvas = document.createElement('canvas');
 
+/** Game area
+ * @type {HTMLElement}
+ * @memberof Engine */
+const rootElement = document.getElementById('game');
+rootElement.appendChild(canvas);
+
+/** Main canvas context
+ * @type {CanvasRenderingContext2D}
+ * @memberof Engine */
 const ctx = canvas.getContext("2d");
 
 /** Device pixel ratio
@@ -686,40 +695,40 @@ function cls(color=0) {
 /** Draw a rectangle
  *  @param {Number} x - Coordinate x of the top left corner of the rectangle
  *  @param {Number} y - Coordinate y of the top left corner of the rectangle
- *  @param {Number} w - Width of the rectangle
- *  @param {Number} h - Height of the rectangle
- *  @param {Number} [c] - Color of the rectangle (default=6)
+ *  @param {Number} width - Width of the rectangle
+ *  @param {Number} height - Height of the rectangle
+ *  @param {Number} [color] - Color of the rectangle (default=6)
  * @example
  * rect(10, 10, 50, 30, 7)  // draw a white rectangle at (10,10)
  * @memberof Engine */
-function rect(x, y, w, h, c=6) {
+function rect(x, y, width, height, color=6) {
     x += .5;
     y += .5;
-    w -= 1;
-    h -= 1;
-    ctx.strokeStyle = COLORS[c];
-    ctx.strokeRect(x, y, w, h);
+    width -= 1;
+    height -= 1;
+    ctx.strokeStyle = COLORS[color];
+    ctx.strokeRect(x, y, width, height);
 }
 
 /** Draw a filled rectangle
  *  @param {Number} x - Coordinate x of the top left corner of the rectangle
  *  @param {Number} y - Coordinate y of the top left corner of the rectangle
- *  @param {Number} w - Width of the rectangle
- *  @param {Number} h - Height of the rectangle
- *  @param {Number} [c] - Color of the rectangle (default=6)
+ *  @param {Number} width - Width of the rectangle
+ *  @param {Number} height - Height of the rectangle
+ *  @param {Number} [color] - Color of the rectangle (default=6)
  * @example
  * rectfill(10, 10, 50, 30, 7)  // draw a white filled rectangle at (10,10)
  * @memberof Engine */
-function rectfill(x, y, w, h, c=6) {
-    ctx.fillStyle = COLORS[c];
-    ctx.fillRect(x, y, w, h); 
+function rectfill(x, y, width, height, color=6) {
+    ctx.fillStyle = COLORS[color];
+    ctx.fillRect(x, y, width, height); 
 }
 
 /** Helper function to draw a circle or a filled circle
  *  @param {Number} centerX   - Coordinate x of the center of the circle
  *  @param {Number} centerY   - Coordinate y of the center of the circle
  *  @param {Number} radius    - Radius of the circle
- *  @param {Number} color     - Color of the circle
+ *  @param {String} color     - Color of the circle
  *  @param {Boolean} [filled] - If true the circle is filled
  * @memberof Engine */
 function drawCircle(centerX, centerY, radius, color, filled=false) {
@@ -795,25 +804,25 @@ function drawHorizontalLine(x1, x2, y) {
 /** Draw a circle
  *  @param {Number} x   - Coordinate x of the center of the circle
  *  @param {Number} y   - Coordinate y of the center of the circle
- *  @param {Number} r   - Radius of the circle
- *  @param {Number} [c] - Color of the circle (default=6)
+ *  @param {Number} radius   - Radius of the circle
+ *  @param {Number} [color] - Color of the circle (default=6)
  * @example
  * circ(10, 10, 5, 7)  // draw a white circle with center at (10,10)
  * @memberof Engine */
-function circ(x, y, r, c=6) {
-    drawCircle(x, y, r, COLORS[c]);
+function circ(x, y, radius, color=6) {
+    drawCircle(x, y, radius, COLORS[color]);
 }
 
 /** Draw a filled circle
  *  @param {Number} x   - Coordinate x of the center of the circle
  *  @param {Number} y   - Coordinate y of the center of the circle
- *  @param {Number} r   - Radius of the circle
- *  @param {Number} [c] - Color of the circle (defualt=6)
+ *  @param {Number} radius   - Radius of the circle
+ *  @param {Number} [color] - Color of the circle (defualt=6)
  * @example
  * circfill(10, 10, 5, 7)  // draw a white filled circle with center at (10,10)
  * @memberof Engine */
-function circfill(x, y, r, c=6) {
-    drawCircle(x, y, r, COLORS[c], true);
+function circfill(x, y, radius, color=6) {
+    drawCircle(x, y, radius, COLORS[color], true);
 }
 
 //function drawPixel(x, y) {
@@ -825,18 +834,18 @@ function circfill(x, y, r, c=6) {
  *  @param {Number} y0  - Coordinate y of the left side of the line
  *  @param {Number} x1  - Coordinate x of the right side of the line
  *  @param {Number} y1  - Coordinate y of the right side of the line
- *  @param {Number} [c]   - Color of the line (default=6)
+ *  @param {Number} [color]   - Color of the line (default=6)
  * @example
  * line(10, 10, 20, 20, 7)  // draw a white line
  * @memberof Engine */
-function line(x0, y0, x1, y1, c=6) {
+function line(x0, y0, x1, y1, color=6) {
   let dx = Math.abs(x1 - x0);
   let dy = Math.abs(y1 - y0);
   let sx = (x0 < x1) ? 1 : -1;
   let sy = (y0 < y1) ? 1 : -1;
   let err = (dx > dy ? dx : -dy) / 2;
 
-  ctx.fillStyle = COLORS[c];
+  ctx.fillStyle = COLORS[color];
   
   while (true) {
     ctx.fillRect(x0, y0, 1, 1);
@@ -859,12 +868,12 @@ function line(x0, y0, x1, y1, c=6) {
  *  @param {String} str   - String to print
  *  @param {Number} posX  - Coordinate x of the string on the screen
  *  @param {Number} posY  - Coordinate y of the string on the scree
- *  @param {Number} [c]   - Color of the line (default=6)
+ *  @param {Number} [color]   - Color of the line (default=6)
  * @example
  * print("hello world", 10, 20, 7) // print the text "hello world"
  * @memberof Engine */
-function print(str, posX, posY, c=6) {
-  ctx.fillStyle = COLORS[c];
+function print(str, posX, posY, color=6) {
+  ctx.fillStyle = COLORS[color];
 
   let needed = [];
   str = str.toUpperCase();
