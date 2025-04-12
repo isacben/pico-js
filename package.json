@@ -1,0 +1,31 @@
+{
+  "name": "pico-js",
+  "version": "0.1.0",
+  "description": "PICO-JS - Tiny JavaScript Retro Game Engine",
+  "main": "dist/picojs.esm.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isacben/pico-js.git"
+  },
+  "keywords": [
+    "PICO-JS",
+    "HTML5",
+    "JavaScript",
+    "game",
+    "engine",
+    "library",
+    "js13kgames"
+  ],
+  "author": "Isaac Benitez",
+  "license": "MIT",
+  "homepage": "https://github.com/isacben/pico-js#readme",
+  "bugs": {
+    "url": "https://github.com/isacben/pico-js/issues"
+  },
+  "scripts": {
+    "build": "node src/engineBuild.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
