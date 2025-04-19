@@ -620,6 +620,52 @@ ctx.imageSmoothingEnabled = false;
 
 ctx.scale(ratio,ratio);
 
+/**
+ * @type {HTMLCanvasElement}
+ * @memberof Engine */
+let spritesCanvas;
+spritesCanvas = document.createElement('canvas');
+
+/**
+ * @type {HTMLImageElement}
+ */
+let spritesImg = new Image;
+
+rootElement.appendChild(spritesImg);
+
+/**
+ * Draw the sprites sheet from a secondary canvas
+ * @memberof Engine
+ */
+function drawSprites() {
+  spritesCanvas.width = 128;
+  spritesCanvas.height = 128;
+  let c = spritesCanvas.getContext('2d');
+  
+  let x = 0; 
+  let y = 0;
+  Object.keys(sprites).forEach((key) => {
+    const sprite = sprites[key];
+    let currY = 0;
+
+    x = Math.floor(Number(key) % 16) * 8;
+    y = Math.floor(Number(key) / 16) * 8;
+    for (let row = 0; row < sprite.length; row++) {
+      let currRow = sprite[row];
+      for (let col = 0; col < currRow.length; col++) {
+        if (currRow[col]) {
+          const color = COLORS[sprite[row][col]];
+          c.fillStyle = color;
+          c.fillRect(x + col, y + currY, 1, 1);
+        }
+      }
+      currY += 1;
+    }
+  });
+  c.drawImage(spritesImg, 0, 0, 128, 128);
+  spritesImg.src = spritesCanvas.toDataURL();
+}
+
 /** Resize main canvas based on the browser window size
  *  @memberof Engine */
 function resizeCanvas() {
@@ -650,6 +696,8 @@ function resizeCanvas() {
     _draw();
     if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
 }
+
+drawSprites();
 
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
