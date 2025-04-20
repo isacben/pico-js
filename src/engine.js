@@ -621,12 +621,6 @@ ctx.imageSmoothingEnabled = false;
 ctx.scale(ratio,ratio);
 
 /**
- * @type {HTMLCanvasElement}
- * @memberof Engine */
-let spritesCanvas;
-spritesCanvas = document.createElement('canvas');
-
-/**
  * @type {HTMLImageElement}
  */
 let spritesImg = new Image;
@@ -637,6 +631,7 @@ let spritesImg = new Image;
  * @memberof Engine
  */
 function drawSprites() {
+  const spritesCanvas = document.createElement('canvas');
   spritesCanvas.width = 128;
   spritesCanvas.height = 128;
   let c = spritesCanvas.getContext('2d');
