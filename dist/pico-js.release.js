@@ -634,8 +634,7 @@ spritesCanvas = document.createElement('canvas');
  * @type {HTMLImageElement}
  */
 let spritesImg = new Image;
-
-rootElement.appendChild(spritesImg);
+//rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
 
 /**
  * Draw the sprites sheet from a secondary canvas
