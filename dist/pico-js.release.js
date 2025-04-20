@@ -580,7 +580,6 @@ const engineChars = {
   ],
 }
 
-
 /** Canvas virtual width
  * @type {Number}
  * @default
@@ -598,21 +597,18 @@ let previousTime = performance.now();
 
 /** Main Canvas
  * @type {HTMLCanvasElement}
- * @default
  * @memberof Engine */
 let canvas;
 canvas = document.createElement('canvas');
 
 /** Game area
  * @type {HTMLElement}
- */
+ * @memberof Engine */
 const rootElement = document.getElementById('game');
 rootElement.appendChild(canvas);
 
-
 /** Main canvas context
  * @type {CanvasRenderingContext2D}
- * @default
  * @memberof Engine */
 const ctx = canvas.getContext("2d");
 
@@ -627,6 +623,46 @@ canvas.height = cHeight * ratio;
 ctx.imageSmoothingEnabled = false;
 
 ctx.scale(ratio,ratio);
+
+/**
+ * @type {HTMLImageElement}
+ */
+let spritesImg = new Image;
+//rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
+
+/**
+ * Draw the sprites sheet from a secondary canvas
+ * @memberof Engine
+ */
+function drawSprites() {
+  const spritesCanvas = document.createElement('canvas');
+  spritesCanvas.width = 128;
+  spritesCanvas.height = 128;
+  let c = spritesCanvas.getContext('2d');
+  
+  let x = 0; 
+  let y = 0;
+  Object.keys(sprites).forEach((key) => {
+    const sprite = sprites[key];
+    let currY = 0;
+
+    x = Math.floor(Number(key) % 16) * 8;
+    y = Math.floor(Number(key) / 16) * 8;
+    for (let row = 0; row < sprite.length; row++) {
+      let currRow = sprite[row];
+      for (let col = 0; col < currRow.length; col++) {
+        if (currRow[col]) {
+          const color = COLORS[sprite[row][col]];
+          c.fillStyle = color;
+          c.fillRect(x + col, y + currY, 1, 1);
+        }
+      }
+      currY += 1;
+    }
+  });
+  c.drawImage(spritesImg, 0, 0, 128, 128);
+  spritesImg.src = spritesCanvas.toDataURL();
+}
 
 /** Resize main canvas based on the browser window size
  *  @memberof Engine */
@@ -658,6 +694,8 @@ function resizeCanvas() {
     _draw();
     if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
 }
+
+drawSprites();
 
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -917,24 +955,31 @@ function print(str, posX, posY, color=6) {
  *  @param {Number} n - Index of the sprite
  *  @param {Number} x  - Coordinate x of the sprite on the screen
  *  @param {Number} y  - Coordinate y of the sprite on the scree
+ *  @param {Number} [w] - How many sprites wide (default=1)
+ *  @param {Number} [h] - How many sprites high (default=1)
  * @example
  * spr(0, 10, 20) // draw sprite 0 at position (10,20)
  * @memberof Engine */
-function spr(n, x, y) {
-  const sprite = sprites[n];
-  let currY = 0;
-
-  for (let row = 0; row < sprite.length; row++) {
-    let currRow = sprite[row];
-    for (let col = 0; col < currRow.length; col++) {
-      if (currRow[col]) {
-        const color = COLORS[sprite[row][col]];
-        ctx.fillStyle = color;
-        ctx.fillRect(x + col, y + currY, 1, 1);
-      }
-    }
-    currY += 1;
+function spr(n, x, y, w=1, h=1) {
+  // check if the sprite is in the range of the sprites: 16x16
+  if (n < 0 || n > 255) {
+    console.error(`Sprite ${n} is out of range`);
+    return;
   }
+
+  // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight):
+  // Draws a section of the image, defined by (sx, sy, sWidth, sHeight),
+  // onto the canvas at (dx, dy), scaled to dWidth and dHeight.
+  ctx.drawImage(
+    spritesImg, 
+    (n % 16) * 8,           // sx of the section of the sprite sheet
+    Math.floor(n / 16) * 8, // sy of the section of the sprite sheet
+    w * 8,                  // sWidth of the section of the sprite sheet
+    h * 8,                  // sHeight of the section of the sprite sheet
+    x,                      // dx position in the canvas
+    y,                      // dy position in the canvas
+    w * 8,                  // scaled width of the sprite
+    h * 8);                 // scaled height of the sprite
 }
 
 /** Main engine state machine
