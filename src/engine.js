@@ -957,24 +957,31 @@ function print(str, posX, posY, color=6) {
  *  @param {Number} n - Index of the sprite
  *  @param {Number} x  - Coordinate x of the sprite on the screen
  *  @param {Number} y  - Coordinate y of the sprite on the scree
+ *  @param {Number} [w] - How many sprites wide (default=1)
+ *  @param {Number} [h] - How many sprites high (default=1)
  * @example
  * spr(0, 10, 20) // draw sprite 0 at position (10,20)
  * @memberof Engine */
-function spr(n, x, y) {
-  const sprite = sprites[n];
-  let currY = 0;
-
-  for (let row = 0; row < sprite.length; row++) {
-    let currRow = sprite[row];
-    for (let col = 0; col < currRow.length; col++) {
-      if (currRow[col]) {
-        const color = COLORS[sprite[row][col]];
-        ctx.fillStyle = color;
-        ctx.fillRect(x + col, y + currY, 1, 1);
-      }
-    }
-    currY += 1;
+function spr(n, x, y, w=1, h=1) {
+  // check if the sprite is in the range of the sprites: 16x16
+  if (n < 0 || n > 255) {
+    console.error(`Sprite ${n} is out of range`);
+    return;
   }
+
+  // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight):
+  // Draws a section of the image, defined by (sx, sy, sWidth, sHeight),
+  // onto the canvas at (dx, dy), scaled to dWidth and dHeight.
+  ctx.drawImage(
+    spritesImg, 
+    (n % 16) * 8,           // sx of the section of the sprite sheet
+    Math.floor(n / 16) * 8, // sy of the section of the sprite sheet
+    w * 8,                  // sWidth of the section of the sprite sheet
+    h * 8,                  // sHeight of the section of the sprite sheet
+    x,                      // dx position in the canvas
+    y,                      // dy position in the canvas
+    w * 8,                  // scaled width of the sprite
+    h * 8);                 // scaled height of the sprite
 }
 
 /** Main engine state machine
