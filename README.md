@@ -21,9 +21,9 @@ PICO-JS is currently in early develpment. This is what we are working on:
 - [ ] Maps
 - [ ] Documentation
 
-## How to use
+## Getting started
 
-Just create an `_update()` function and a `_draw()` function, and you are all set.
+Create an `_update()` function and a `_draw()` function. Then just initialize the engine passing these functions and an object with sprites if needed:
 
 Example:
 
@@ -39,6 +39,27 @@ function _draw() {
   cls();
   circfill(posX, 60, 8, 4);
 }
+
+engineInit(_update, _draw, {});
+```
+
+## Sprites
+
+The sprites object should contain 8x8 arrays that represent each sprite. The object can contain up to 128 sprites:
+
+```javascript
+const sprites = {
+  0: [
+    [],
+    [, , , 9, 7, 7, 7],
+    [, 9, 9, 9, 7, 7, 5],
+    [7, 7, 7, 9, 9, 7, 7],
+    [7, 7, 7, 7, 9, 8, 8, 8],
+    [7, 7, 7, 7, 9, 9, 9],
+    [, 7, 7, 9, 9, 9, ,],
+    [],
+  ],
+};
 ```
 
 ## Builds
