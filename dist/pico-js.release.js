@@ -7,6 +7,8 @@
  * MIT License - Copyright 2025 Isaac Benitez
  * 
  * Engine Features
+ * 
+ * Call engineInit() to start the engine!
  * @namespace Engine
  */
 
@@ -632,9 +634,9 @@ let spritesImg = new Image;
 
 /**
  * Draw the sprites sheet from a secondary canvas
- * @memberof Engine
- */
-function drawSprites() {
+ * @param {{[key: string]: number[][]}} sprites - Contains the sprites to be used in the game
+ * @memberof Engine */
+function drawSprites(sprites) {
   const spritesCanvas = document.createElement('canvas');
   spritesCanvas.width = 128;
   spritesCanvas.height = 128;
@@ -664,55 +666,50 @@ function drawSprites() {
   spritesImg.src = spritesCanvas.toDataURL();
 }
 
-/** Resize main canvas based on the browser window size
- *  @memberof Engine */
-function resizeCanvas() {
-    cWidth = window.innerWidth;
-    cHeight = window.innerHeight;
+/** Startup PICO-JS engine
+ * @param {Function} _update - Called every frame to update the game objects
+ * @param {Function} _draw - Called every frame to render the game objects
+ * @param {{[key: string]: number[][]}} sprites - Contains the sprites to be used in the game
+ * @memberof Engine
+ */
+function engineInit(_update, _draw, sprites) {
 
-    const nativeRatio = NATIVE_WIDTH / NATIVE_HEIGHT;
-    const browserWindowRatio = cWidth / cHeight;
+  // Resize main canvas based on the browser window size
+  function resizeCanvas() {
+      cWidth = window.innerWidth;
+      cHeight = window.innerHeight;
 
-    // browser window is too wide
-    if (browserWindowRatio > nativeRatio) {
+      const nativeRatio = NATIVE_WIDTH / NATIVE_HEIGHT;
+      const browserWindowRatio = cWidth / cHeight;
+
+      // browser window is too wide
+      if (browserWindowRatio > nativeRatio) {
         cHeight = Math.floor(cHeight * windowPercentage); // optional
         if (cHeight > maxWidth) cHeight = maxHeight; // optional
     
         cWidth = Math.floor(cHeight * nativeRatio);
-    } else {
+      } else {
         // browser window is too high
-
         cWidth = Math.floor(cWidth * windowPercentage); // optional
         if (cWidth > maxWidth) cWidth = maxWidth; // optional
 
         cHeight = Math.floor(cWidth / nativeRatio);
-    }
+      }
 
-    ctx.canvas.style.width = `${cWidth}px`;
-    ctx.canvas.style.height = `${cHeight}px`;
+      ctx.canvas.style.width = `${cWidth}px`;
+      ctx.canvas.style.height = `${cHeight}px`;
 
-    _draw();
-    if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
-}
+      _draw();
+      if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
+  }
 
-drawSprites();
+  // Main engine game loop
+  function gameLoop(timestamp=0) {
+    const delta = timestamp - previousTime;
+    accumulator += delta;
+    const fps = Math.round(1000 / delta);
 
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-window.requestAnimationFrame(gameLoop);
-
-/** Main engine game loop
- *  @param {Number} timestamp - Timestamp when the game loop starts 
- *  @memberof Engine */
-function gameLoop(timestamp) {
-  const delta = timestamp - previousTime;
-	accumulator += delta;
-
-  const fps = Math.round(1000 / delta);
-
-  while (accumulator >= FRAMES_PER_SECOND) {
-
+    while (accumulator >= FRAMES_PER_SECOND) {
       switch (engineCurrentState) {
         case engineState.PLAYING:
           _update();
@@ -725,11 +722,19 @@ function gameLoop(timestamp) {
           break;
       }
       accumulator -= FRAMES_PER_SECOND;
-  }
+    }
 
-  previousTime = timestamp;
+    previousTime = timestamp;
+    window.requestAnimationFrame(gameLoop);
+  }
+  
+  drawSprites(sprites);
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
   window.requestAnimationFrame(gameLoop);
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main engine API
