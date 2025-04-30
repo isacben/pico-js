@@ -37,9 +37,12 @@ const COLORS = [
 
 /** Frames per second to update the game
  * @type {Number}
- * @default 1000/60
+ * @default 60
  * @memberof Engine */
-const FRAMES_PER_SECOND = 1000 / 60;
+const frameRate = 60;
+
+// Frame time tracking
+let frameTimeLastMS = 0, frameTimeBufferMS = 0, averageFPS = 0;
 
 /** Browser window marging
  * @type {Number}
@@ -626,9 +629,9 @@ ctx.imageSmoothingEnabled = false;
 
 ctx.scale(ratio,ratio);
 
-/**
+/** Sprite sheet image
  * @type {HTMLImageElement}
- */
+ * @memberof Engine */
 let spritesImg = new Image;
 //rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
 
@@ -665,6 +668,9 @@ function drawSprites(sprites) {
   c.drawImage(spritesImg, 0, 0, 128, 128);
   spritesImg.src = spritesCanvas.toDataURL();
 }
+
+function clamp(value, min=0, max=1) { return value < min ? min : value > max ? max : value; }
+function lerp(percent, valueA, valueB) { return valueA + clamp(percent) * (valueB-valueA); }
 
 /** Startup PICO-JS engine
  * @param {Function} _update - Called every frame to update the game objects
@@ -704,27 +710,41 @@ function engineInit(_update, _draw, sprites) {
   }
 
   // Main engine game loop
-  function gameLoop(timestamp=0) {
-    const delta = timestamp - previousTime;
-    accumulator += delta;
-    const fps = Math.round(1000 / delta);
+  function gameLoop(frameTimeMS=0) {
+    const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
+    frameTimeLastMS = frameTimeMS;
+    frameTimeBufferMS += frameTimeDeltaMS;
+    averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
 
-    while (accumulator >= FRAMES_PER_SECOND) {
+    // apply time delta smoothing, improves smoothness of framerate in some browsers
+    let deltaSmooth = 0;
+    if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
+    {
+        // force at least one update each frame since it is waiting for refresh
+        deltaSmooth = frameTimeBufferMS;
+        frameTimeBufferMS = 0;
+    }
+
+    for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate){
       switch (engineCurrentState) {
         case engineState.PLAYING:
           _update();
-          _draw();
-          print(`FPS: ${fps}`, 0, 0, 7);
           break;
         case engineState.PAUSED:
-          _draw();
-          drawEngineMenu();
+          //_draw();
+          //drawEngineMenu();
           break;
       }
-      accumulator -= FRAMES_PER_SECOND;
     }
 
-    previousTime = timestamp;
+    // add the time smoothing back in
+    frameTimeBufferMS += deltaSmooth;
+
+    _draw();
+    if (engineCurrentState === engineState.PAUSED) {
+      drawEngineMenu();
+    }
+    print(`FPS: ${Math.floor(averageFPS)}`, 0, 0, 7);
     window.requestAnimationFrame(gameLoop);
   }
   
@@ -1154,7 +1174,7 @@ function btnp(b) {
     if (pressedBtnCounter[b] === 1) return true;
     
     // If the button is still pressed, but the counter reached 30 fps, reset the counter
-    if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
+    if (pressedBtnCounter[b] >= 30) pressedBtnCounter[b] = 0;
   }
 
   return false;
