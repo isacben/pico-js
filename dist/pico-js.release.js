@@ -705,13 +705,29 @@ function engineInit(_update, _draw, sprites) {
       ctx.canvas.style.width = `${cWidth}px`;
       ctx.canvas.style.height = `${cHeight}px`;
 
-      _draw();
-      if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
+      //_draw();
+      //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
   }
 
+  let msPrev = window.performance.now()
+  const fps = 60
+  const msPerFrame = 1000 / fps
+  let frames = 0
   // Main engine game loop
-  function gameLoop(frameTimeMS=0) {
-    const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
+  function gameLoop() {
+          _draw();
+    requestAnimationFrame(gameLoop);
+    /*const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
+
+    if (frameTimeLastMS !== 0) {
+      const timeElapsed = frameTimeDeltaMS;
+      const frameDifference = Math.round(timeElapsed / 1000/frameRate) - 1;
+  
+      if (frameDifference > 0) {
+        console.warn(`Missed ${frameDifference} frame(s). Time elapsed: ${timeElapsed}ms`);
+      }
+    }
+  
     frameTimeLastMS = frameTimeMS;
     frameTimeBufferMS += frameTimeDeltaMS;
     averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
@@ -725,33 +741,50 @@ function engineInit(_update, _draw, sprites) {
         frameTimeBufferMS = 0;
     }
 
-    for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate){
+
+    for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate){*/
+    const msNow = window.performance.now()
+  const msPassed = msNow - msPrev
+
+  if (msPassed < msPerFrame) return
+
+  const excessTime = msPassed % msPerFrame
+  msPrev = msNow - excessTime
+
+  frames++
       switch (engineCurrentState) {
         case engineState.PLAYING:
           _update();
+          //print(`FPS: ${frames}`, 0, 0, 7);
           break;
         case engineState.PAUSED:
           //_draw();
           //drawEngineMenu();
           break;
       }
-    }
+    //}
 
     // add the time smoothing back in
-    frameTimeBufferMS += deltaSmooth;
+    //frameTimeBufferMS += deltaSmooth;
 
-    _draw();
-    if (engineCurrentState === engineState.PAUSED) {
-      drawEngineMenu();
-    }
-    print(`FPS: ${Math.floor(averageFPS)}`, 0, 0, 7);
-    window.requestAnimationFrame(gameLoop);
+    //_draw();
+    //if (engineCurrentState === engineState.PAUSED) {
+    //  drawEngineMenu();
+    //}
+    //print(`FPS: ${Math.floor(averageFPS)}`, 0, 0, 7);
+    
   }
   
+  setInterval(() => {
+    console.log(frames);
+    frames = 0;
+  }, 1000)
+
   drawSprites(sprites);
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
-  window.requestAnimationFrame(gameLoop);
+
+  requestAnimationFrame(gameLoop);
 }
 
 
@@ -763,7 +796,7 @@ function engineInit(_update, _draw, sprites) {
  *  @param {Number} [color] - Color to cover the screen with (defualt=0)
  *  @memberof Engine */
 function cls(color=0) {
-    rectfill(0, 0, canvas.width, canvas.height, color);
+  rectfill(0, 0, canvas.width, canvas.height, color);
 }
 
 /** Draw a rectangle
@@ -1174,7 +1207,7 @@ function btnp(b) {
     if (pressedBtnCounter[b] === 1) return true;
     
     // If the button is still pressed, but the counter reached 30 fps, reset the counter
-    if (pressedBtnCounter[b] >= 30) pressedBtnCounter[b] = 0;
+    if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
   }
 
   return false;
