@@ -611,7 +611,7 @@ rootElement.appendChild(canvas);
 /** Main canvas context
  * @type {CanvasRenderingContext2D}
  * @memberof Engine */
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { alpha: false });
 
 /** Device pixel ratio
  * @type {Number}
@@ -771,10 +771,10 @@ function engineInit(_update, _draw, sprites) {
     
   }
   
-  setInterval(() => {
-    console.log(frames);
-    frames = 0;
-  }, 1000)
+  //setInterval(() => {
+  //  console.log(frames);
+  //  frames = 0;
+  //}, 1000)
 
   drawSprites(sprites);
   window.addEventListener('resize', resizeCanvas);
@@ -793,6 +793,7 @@ function engineInit(_update, _draw, sprites) {
  *  @memberof Engine */
 function cls(color=0) {
   rectfill(0, 0, canvas.width, canvas.height, color);
+  //ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 /** Draw a rectangle
