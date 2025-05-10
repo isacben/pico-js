@@ -98,6 +98,12 @@ const engineState = {
   RESET: 'reset'
 };
 
+/** Pause state
+ * @type {Boolean}
+ * @default false
+ * @memberof Engine */
+let paused = false;
+
 /** Array of the available buttons in the engine
  * - 0: left
  * - 1: right
@@ -708,47 +714,50 @@ function engineInit(_update, _draw, sprites) {
   // Main engine game loop
   function gameLoop(frameTimeMS=0) {
     const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
-
     frameTimeLastMS = frameTimeMS;
-    frameTimeBufferMS += frameTimeDeltaMS;
+    
+    // show debug panel here
+    // TODO
     averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
 
-    // apply time delta smoothing, improves smoothness of framerate in some browsers
-    let deltaSmooth = 0;
-    if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
-    {
-        // force at least one update each frame since it is waiting for refresh
-        deltaSmooth = frameTimeBufferMS;
-        frameTimeBufferMS = 0;
+    //frameTimeBufferMS += frameTimeDeltaMS;
+    frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
+
+    resizeCanvas();
+
+    if (paused) {
+      // TODO: draw menu in overlay canvas
     }
-
-
-    for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate){
-      switch (engineCurrentState) {
-        case engineState.PLAYING:
-          _update();
-          break;
-        case engineState.PAUSED:
-          // _draw();
-          // drawEngineMenu();
-          break;
+    else {
+      // apply time delta smoothing, improves smoothness of framerate in some browsers
+      let deltaSmooth = 0;
+      if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
+      {
+          // force at least one update each frame since it is waiting for refresh
+          deltaSmooth = frameTimeBufferMS;
+          frameTimeBufferMS = 0;
       }
-    }
 
-    // add the time smoothing back in
-    frameTimeBufferMS += deltaSmooth;
+      // update game state
+      // update multiple frames if necessary in case of slow framerate
+      for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate) {
+        _update();
+      }
+
+      // add the time smoothing back in
+      frameTimeBufferMS += deltaSmooth;
+    }
 
     _draw();
-    if (engineCurrentState === engineState.PAUSED) {
-      drawEngineMenu();
-    }
     print(`FPS: ${Math.floor(averageFPS)}`, 0, 0, 7);
+    // TODO: remove when there is an overlay canvas
+    if (paused) drawEngineMenu();
+
     requestAnimationFrame(gameLoop);
   }
   
   drawSprites(sprites);
   window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
 
   requestAnimationFrame(gameLoop);
 }
@@ -1056,6 +1065,7 @@ function handleMenu() {
   switch (currentMenuState.state) {
     case menuState.DISABLED:
       engineCurrentState = engineState.PAUSED;
+      paused = true;
       currentMenuState.state = menuState.MAIN;
       menuItems = ['continue', 'options', 'reset game'];
       break;
@@ -1064,6 +1074,7 @@ function handleMenu() {
         case 0: // select 'continue'
           currentMenuState.state = menuState.DISABLED;
           engineCurrentState = engineState.PLAYING;
+          paused = false;
           break;
         case 1: // select 'options'
           currentMenuState.state = menuState.OPTIONS
