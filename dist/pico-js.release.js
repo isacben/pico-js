@@ -115,17 +115,14 @@ let paused = false;
  * - 3: down
  * - 4: z
  * - 5: x
- * @type {Array<Boolean>}
+ * @type {Array<Number>}
  * @memberof Engine */
-const buttons = [
-  false, false, false, false,
-  false, false
-];
+let buttons = [0,0,0,0,0];
 
 /** Array to keep track of the number of frames that have passed when a button remains pressed
  * @type {Array<Number>}
  * @memberof Engine */
-let pressedBtnCounter = [0, 0, 0, 0, 0, 0];
+let pressedBtnCounter = [0, 0, 0, 0, 0];
 
 /** Engine current state of the engine state machine
  * @type {String}
@@ -731,6 +728,9 @@ function engineInit(_update, _draw, sprites) {
 
     if (paused) {
       // TODO: draw menu in overlay canvas
+      inputUpdate();
+      updateEngineMenu();
+      inputUpdatePost();
     }
     else {
       // apply time delta smoothing, improves smoothness of framerate in some browsers
@@ -745,7 +745,9 @@ function engineInit(_update, _draw, sprites) {
       // update game state
       // update multiple frames if necessary in case of slow framerate
       for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate) {
+        inputUpdate();
         _update();
+        inputUpdatePost();
       }
 
       // add the time smoothing back in
@@ -760,10 +762,11 @@ function engineInit(_update, _draw, sprites) {
     requestAnimationFrame(gameLoop);
   }
   
-  drawSprites(sprites);
+  inputInit();
+  window.addEventListener('resize', resizeCanvas);
 
   requestAnimationFrame(gameLoop);
-  window.addEventListener('resize', resizeCanvas);
+  drawSprites(sprites);
 }
 
 
@@ -1123,16 +1126,18 @@ function drawEngineMenu() {
     print(item, 32 + x, 50 + y * 8, 7);
     y += 1;
   });
+}
 
+function updateEngineMenu() {
   // arrow up 
-  if (btnp(2)) {
+  if (keyWasPressed(2)) {
     currentMenuState.index -= 1;
     if (currentMenuState.index < 0)
       currentMenuState.index = menuItems.length - 1;
   }
   
   // arrow down
-  if (btnp(3)) {
+  if (keyWasPressed(3)) {
     currentMenuState.index += 1;
     if (currentMenuState.index >= menuItems.length)
       currentMenuState.index = 0;
@@ -1141,9 +1146,9 @@ function drawEngineMenu() {
   // left and right keys for volume control
   if (currentMenuState.state === menuState.OPTIONS &&
     currentMenuState.index === 1) {
-    if (btnp(0))
+    if (keyWasPressed(0))
       volume = Math.max(0, volume - 1);
-    if (btnp(1))
+    if (keyWasPressed(1))
       volume = Math.min(8, volume + 1);
     menuItems[1] =`volume: ${printVolume()}`;
   }
@@ -1162,8 +1167,9 @@ function drawEngineMenu() {
  * btn(5) // returns true when `x` is pressed
  * @memberof Engine */
 function btn(b) {
-  if (buttons[b]) return true;
-  return false;
+  //if (buttons[b]) return true;
+  //return false;
+  return !paused && keyIsDown(b);
 }
 
 /** Returns true when a button is down and it was not down the last frame
@@ -1181,77 +1187,110 @@ function btn(b) {
  * btnp(5) // returns true when `x` is pressed
  * @memberof Engine */
 function btnp(b) {
-  if (buttons[b]) {
+  //if (buttons[b]) {
     // Every time the button is pressed increment the counter.
-    pressedBtnCounter[b] += 1;
+    //pressedBtnCounter[b] += 1;
 
     // Return true only the first time the button is pressed (the counter is 1)
-    if (pressedBtnCounter[b] === 1) return true;
+    //if (pressedBtnCounter[b] === 1) return true;
     
     // If the button is still pressed, but the counter reached 30 fps, reset the counter
-    if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
-  }
+    //if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
+    return !paused && keyWasPressed(b);
+  //}
 
-  return false;
+  //return false;
 }
 
-document.addEventListener('keydown', (event) => {
-  if (!event.repeat) {
-    switch (event.code) {
+// Input event handlers
+function inputInit() {
+  onkeydown = (e) =>
+  {
+    if (!e.repeat)
+    {
+      switch (e.code)
+      {
+        case "ArrowLeft":
+          buttons[0] = 3;
+          break;
+        case "ArrowRight":
+          buttons[1] = 3;
+          break;
+        case "ArrowUp":
+          buttons[2] = 3;
+          break;
+        case "ArrowDown":
+          buttons[3] = 3;
+          break;
+        case "KeyZ":
+          buttons[4] = 3;
+          break;
+        case "KeyX":
+          buttons[5] = 3;
+          break;
+        case "Enter":
+          handleMenu();
+          break;
+      }
+    }
+    e.preventDefault();
+  }
+
+  onkeyup = (e) => {
+    switch (e.code) {
       case "ArrowLeft":
-        buttons[0] = true;
+        buttons[0] = 4;
+        pressedBtnCounter[0] = 0;
         break;
       case "ArrowRight":
-        buttons[1] = true;
+        buttons[1] = 4;
+        pressedBtnCounter[1] = 0;
         break;
       case "ArrowUp":
-        buttons[2] = true;
+        buttons[2] = 4;
+        pressedBtnCounter[2] = 0;
         break;
       case "ArrowDown":
-        buttons[3] = true;
+        buttons[3] = 4;
+        pressedBtnCounter[3] = 0;
         break;
       case "KeyZ":
-        buttons[4] = true;
+        buttons[4] = 4;
+        pressedBtnCounter[4] = 0;
         break;
       case "KeyX":
-        buttons[5] = true;
-        break;
-      case "Enter":
-        handleMenu();
+        buttons[5] = 4;
+        pressedBtnCounter[5] = 0;
         break;
     }
   }
 
-  preventDefaultInput && event.preventDefault();
-});
+  // reset input when focus is lost
+  onblur = (e) => clearInput(); 
+}
 
-document.addEventListener('keyup', (event) => {
-  switch (event.code) {
-    case "ArrowLeft":
-      buttons[0] = false;
-      pressedBtnCounter[0] = 0;
-      break;
-    case "ArrowRight":
-      buttons[1] = false;
-      pressedBtnCounter[1] = 0;
-      break;
-    case "ArrowUp":
-      buttons[2] = false;
-      pressedBtnCounter[2] = 0;
-      break;
-    case "ArrowDown":
-      buttons[3] = false;
-      pressedBtnCounter[3] = 0;
-      break;
-    case "KeyZ":
-      buttons[4] = false;
-      pressedBtnCounter[4] = 0;
-      break;
-    case "KeyX":
-      buttons[5] = false;
-      pressedBtnCounter[5] = 0;
-      break;
+/** Clears all inputs
+ * @memberof Engine */
+function clearInput() {
+  buttons = [0, 0, 0, 0, 0];
+}
+
+function inputUpdate() {
+  if (!document.hasFocus()) {
+    // if the document is not focused, clear all inputs
+    clearInput();
   }
+}
 
-  preventDefaultInput && event.preventDefault();
-});
+function inputUpdatePost() {
+  for (const b in buttons)
+    buttons[b] &= 1;
+}
+
+function keyIsDown(b) {
+  return !!(buttons[b] & 1)
+}
+
+function keyWasPressed(b) {
+  return !!(buttons[b] & 2);
+}
