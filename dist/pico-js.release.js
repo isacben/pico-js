@@ -123,128 +123,13 @@ function inputInit()
   // reset input when focus is lost
   onblur = (e) => clearInput(); 
 }
-/** 
- * PICO-JS - A tiny JavaScript Game Engine
- * MIT License - Copyright 2025 Isaac Benitez
- * 
- * Engine Features
- * 
- * Call engineInit() to start the engine!
- * @namespace Engine
+/**
+ * PICO-JS Engine Font
+ * - Defines the engine font
+ * @namespace Font
  */
 
 
-
-/** Name of the engine
- *  @type {String}
- *  @default
- *  @memberof Engine */
-const engineName = 'PICO-JS';
-
-/** Version of engine
- *  @type {String}
- *  @default
- *  @memberof Engine */
-const engineVersion = '0.1.0';
-
-/** Array containing the engine colors
- *  @type {Array}
- *  @memberof Engine */
-const COLORS = [
-  "#000000", "#1D2B53", "#7E2553", "#008751", 
-  "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
-  "#FF004D", "#FFA300", "#FFEC27", "#00E436",
-  "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
-
-/** Frames per second to update the game
- * @type {Number}
- * @default 60
- * @memberof Engine */
-const frameRate = 60;
-
-// Frame time tracking
-let frameTimeLastMS = 0, frameTimeBufferMS = 0, averageFPS = 0;
-
-/** Browser window marging
- * @type {Number}
- * @default 50
- * @memberof Engine */
-const WINDOW_MARGIN = 50;
-
-/** Size of the tiles
- * @type {Number}
- * @default 8
- * @memberof Engine */
-const TILE_SIZE = 8;
-
-/** The native game canvas width size in pixels
- * @type {Number}
- * @default 128
- * @memberof Engine */
-const NATIVE_WIDTH = TILE_SIZE * 16;
-
-/** The native game canvas height size in pixels
- * @type {Number}
- * @default 128
- * @memberof Engine */
-const NATIVE_HEIGHT = TILE_SIZE * 16;
-
-/** Max multiplier to control the size of the main canvas
- * @type {Number}
- * @default 10
- * @memberof Engine */
-const maxMultiplier = 10;
-
-/** Max virtual width of the main canvas
- * @type {Number}
- * @default
- * @memberof Engine */
-const maxWidth = NATIVE_WIDTH * maxMultiplier;
-
-/** Max virtual height of the main canvas
- * @type {Number}
- * @default
- * @memberof Engine */
-const maxHeight = NATIVE_HEIGHT * maxMultiplier;
-
-/** Value to adjust the virtual size of the canvas in the window
- * @type {Number}
- * @default 0.9
- * @memberof Engine */
-const windowPercentage = 0.9;
-
-/** Main engine state machine
- * @type {{PLAYING: string, PAUSED: string, MENU: string, RESET: string}}
- * @memberof Engine */
-const engineState = {
-  PLAYING: 'playing',
-  PAUSED: 'paused',
-  MENU: 'menu',
-  RESET: 'reset'
-};
-
-/** Pause state
- * @type {Boolean}
- * @default false
- * @memberof Engine */
-let paused = false;
-
-
-/** Array to keep track of the number of frames that have passed when a button remains pressed
- * @type {Array<Number>}
- * @memberof Engine */
-let pressedBtnCounter = [0, 0, 0, 0, 0];
-
-/** Engine current state of the engine state machine
- * @type {String}
- * @default
- * @memberof Engine */
-let engineCurrentState = engineState.PLAYING;
-
-/** Prevents input continuing to the default browser handling (false by default)
- *  @type {Boolean}
- *  @memberof Engine */
-let preventDefaultInput = false;
 
 /** Array containing the engine supported characters
  *  @type {{[key: string]: number[][]}}
@@ -698,6 +583,128 @@ const engineChars = {
     [,,,]
   ],
 }
+/** 
+ * PICO-JS - A tiny JavaScript Game Engine
+ * MIT License - Copyright 2025 Isaac Benitez
+ * 
+ * Engine Features
+ * 
+ * Call engineInit() to start the engine!
+ * @namespace Engine
+ */
+
+
+
+/** Name of the engine
+ *  @type {String}
+ *  @default
+ *  @memberof Engine */
+const engineName = 'PICO-JS';
+
+/** Version of engine
+ *  @type {String}
+ *  @default
+ *  @memberof Engine */
+const engineVersion = '0.1.0';
+
+/** Array containing the engine colors
+ *  @type {Array}
+ *  @memberof Engine */
+const COLORS = [
+  "#000000", "#1D2B53", "#7E2553", "#008751", 
+  "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8", 
+  "#FF004D", "#FFA300", "#FFEC27", "#00E436",
+  "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
+
+/** Frames per second to update the game
+ * @type {Number}
+ * @default 60
+ * @memberof Engine */
+const frameRate = 60;
+
+// Frame time tracking
+let frameTimeLastMS = 0, frameTimeBufferMS = 0, averageFPS = 0;
+
+/** Browser window marging
+ * @type {Number}
+ * @default 50
+ * @memberof Engine */
+const WINDOW_MARGIN = 50;
+
+/** Size of the tiles
+ * @type {Number}
+ * @default 8
+ * @memberof Engine */
+const TILE_SIZE = 8;
+
+/** The native game canvas width size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Engine */
+const NATIVE_WIDTH = TILE_SIZE * 16;
+
+/** The native game canvas height size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Engine */
+const NATIVE_HEIGHT = TILE_SIZE * 16;
+
+/** Max multiplier to control the size of the main canvas
+ * @type {Number}
+ * @default 10
+ * @memberof Engine */
+const maxMultiplier = 10;
+
+/** Max virtual width of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof Engine */
+const maxWidth = NATIVE_WIDTH * maxMultiplier;
+
+/** Max virtual height of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof Engine */
+const maxHeight = NATIVE_HEIGHT * maxMultiplier;
+
+/** Value to adjust the virtual size of the canvas in the window
+ * @type {Number}
+ * @default 0.9
+ * @memberof Engine */
+const windowPercentage = 0.9;
+
+/** Main engine state machine
+ * @type {{PLAYING: string, PAUSED: string, MENU: string, RESET: string}}
+ * @memberof Engine */
+const engineState = {
+  PLAYING: 'playing',
+  PAUSED: 'paused',
+  MENU: 'menu',
+  RESET: 'reset'
+};
+
+/** Pause state
+ * @type {Boolean}
+ * @default false
+ * @memberof Engine */
+let paused = false;
+
+
+/** Array to keep track of the number of frames that have passed when a button remains pressed
+ * @type {Array<Number>}
+ * @memberof Engine */
+let pressedBtnCounter = [0, 0, 0, 0, 0];
+
+/** Engine current state of the engine state machine
+ * @type {String}
+ * @default
+ * @memberof Engine */
+let engineCurrentState = engineState.PLAYING;
+
+/** Prevents input continuing to the default browser handling (false by default)
+ *  @type {Boolean}
+ *  @memberof Engine */
+let preventDefaultInput = false;
 
 /** Canvas virtual width
  * @type {Number}

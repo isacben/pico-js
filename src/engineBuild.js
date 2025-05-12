@@ -15,6 +15,7 @@ const BUILD_FOLDER = 'dist';
 const SOURCE_FOLDER = 'src';
 const engineSourceFiles = [
     `${SOURCE_FOLDER}/engineInput.js`,
+    `${SOURCE_FOLDER}/engineFont.js`,
     `${SOURCE_FOLDER}/engine.js`,
 ];
 const license = '// PICO-JS - MIT License - Copyright 2025 Isaac Benitez\n'
