@@ -2,7 +2,7 @@
 
 ## What is this?
 
-PICO-JS is a JavaScript 2D game engine for retro games heavily inspired by PICO-8 (lua) and [Pyxel](https://github.com/kitao/pyxel) (Python). Similar to these products it gets inspiration from, it provides the tools for you to focus more on builing the game and less on finding 3rd party software to create your assests.
+PICO-JS is a JavaScript 2D game engine for retro games heavily inspired by PICO-8 (lua) and Pyxel (Python). Similar to these products it gets inspiration from, it provides the tools for you to focus more on builing the game and less on finding 3rd party software to create your assests. It also takes a lot of ideas from LittleJS, another JavaScript game engine.
 
 The aim of PICO-JS is to be comfortable enough to just start wirting your game with not much thinking on the gameloop, where to make your sprites and sounds, how to provide a pause functionality or how to organize your code.
 
