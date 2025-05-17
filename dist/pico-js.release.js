@@ -133,7 +133,7 @@ function inputInit()
 
 /** Array containing the engine supported characters
  *  @type {{[key: string]: number[][]}}
- *  @memberof Engine */
+ *  @memberof Font */
 const engineChars = {
   '~': [
     [1],
@@ -616,6 +616,8 @@ const COLORS = [
   "#FF004D", "#FFA300", "#FFEC27", "#00E436",
   "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"];
 
+let bgColor = 0;
+
 /** Frames per second to update the game
  * @type {Number}
  * @default 60
@@ -736,7 +738,7 @@ rootElement.appendChild(canvas);
 /** Main canvas context
  * @type {CanvasRenderingContext2D}
  * @memberof Engine */
-const ctx = canvas.getContext("2d", { alpha: false });
+const ctx = canvas.getContext("2d", { alpha: true });
 
 /** Device pixel ratio
  * @type {Number}
@@ -747,7 +749,7 @@ const ratio = window.devicePixelRatio || 1;
 canvas.width = cWidth * ratio;
 canvas.height = cHeight * ratio; 
 ctx.imageSmoothingEnabled = false;
-
+canvas.style.backgroundColor = COLORS[bgColor];
 ctx.scale(ratio,ratio);
 
 /** Sprite sheet image
@@ -873,7 +875,7 @@ function engineInit(_update, _draw, sprites) {
     }
 
     _draw();
-    print(`FPS: ${Math.floor(averageFPS)}`, 0, 0, 7);
+    print(`FPS: ${Math.floor(averageFPS)}`, 0, 0);
     // TODO: remove when there is an overlay canvas
     if (paused) drawEngineMenu();
 
@@ -882,6 +884,9 @@ function engineInit(_update, _draw, sprites) {
   
   inputInit();
   drawSprites(sprites);
+  ctx.fillStyle = COLORS[6]; // default color
+  ctx.strokeStyle = COLORS[6]; // default color
+
   window.addEventListener('resize', resizeCanvas);
 
   requestAnimationFrame(gameLoop);
@@ -896,8 +901,12 @@ function engineInit(_update, _draw, sprites) {
  *  @param {Number} [color] - Color to cover the screen with (defualt=0)
  *  @memberof Engine */
 function cls(color=0) {
-  rectfill(0, 0, canvas.width, canvas.height, color);
-  //ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (color !== bgColor) {
+    bgColor = color;
+    canvas.style.backgroundColor = COLORS[bgColor];
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //rectfill(0, 0, canvas.width, canvas.height, color);
 }
 
 /** Draw a rectangle
@@ -914,8 +923,16 @@ function rect(x, y, width, height, color=6) {
     y += .5;
     width -= 1;
     height -= 1;
+
+    if (color === 6) {
+      ctx.strokeRect(x, y, width, height);
+      return;
+    }
+
+    ctx.save();
     ctx.strokeStyle = COLORS[color];
     ctx.strokeRect(x, y, width, height);
+    ctx.restore();
 }
 
 /** Draw a filled rectangle
@@ -928,8 +945,15 @@ function rect(x, y, width, height, color=6) {
  * rectfill(10, 10, 50, 30, 7)  // draw a white filled rectangle at (10,10)
  * @memberof Engine */
 function rectfill(x, y, width, height, color=6) {
+    if (color === 6) {
+      ctx.fillRect(x, y, width, height);
+      return;
+    }
+
+    ctx.save();
     ctx.fillStyle = COLORS[color];
     ctx.fillRect(x, y, width, height); 
+    ctx.restore();
 }
 
 /** Helper function to draw a circle or a filled circle
@@ -1081,7 +1105,8 @@ function line(x0, y0, x1, y1, color=6) {
  * print("hello world", 10, 20, 7) // print the text "hello world"
  * @memberof Engine */
 function print(str, posX, posY, color=6) {
-  ctx.fillStyle = COLORS[color];
+  ctx.save(); 
+  if (color !== 6) ctx.fillStyle = COLORS[color];
 
   let needed = [];
   str = str.toUpperCase();
@@ -1111,6 +1136,7 @@ function print(str, posX, posY, color=6) {
     }
     currX += 1 + addX;
   }
+  ctx.restore();
 }
 
 /** Draw a sprite on the screen
@@ -1132,16 +1158,26 @@ function spr(n, x, y, w=1, h=1) {
   // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight):
   // Draws a section of the image, defined by (sx, sy, sWidth, sHeight),
   // onto the canvas at (dx, dy), scaled to dWidth and dHeight.
+
+  const sx = (n % 16) * 8;           // sx of the section of the sprite sheet
+  const sy = Math.floor(n / 16) * 8; // sy of the section of the sprite sheet
+  const sWidth = w * 8;              // sWidth of the section of the sprite sheet
+  const sHeight = h * 8;             // sHeight of the section of the sprite sheet
+
+  ctx.save();
+
   ctx.drawImage(
     spritesImg, 
-    (n % 16) * 8,           // sx of the section of the sprite sheet
-    Math.floor(n / 16) * 8, // sy of the section of the sprite sheet
-    w * 8,                  // sWidth of the section of the sprite sheet
-    h * 8,                  // sHeight of the section of the sprite sheet
-    x,                      // dx position in the canvas
-    y,                      // dy position in the canvas
-    w * 8,                  // scaled width of the sprite
-    h * 8);                 // scaled height of the sprite
+    sx,           // sx of the section of the sprite sheet
+    sy,           // sy of the section of the sprite sheet
+    sWidth,      // sWidth of the section of the sprite sheet
+    sHeight,      // sHeight of the section of the sprite sheet
+    x,            // dx position in the canvas
+    y,            // dy position in the canvas
+    sWidth,       // scaled width of the sprite
+    sHeight);     // scaled height of the sprite
+
+    ctx.restore();
 }
 
 /** Main engine state machine
