@@ -583,6 +583,507 @@ const engineChars = {
     [,,,]
   ],
 }
+/**
+ * PICO-JS Engine Menu
+ * - Controls the menu state
+ * @namespace Menu
+ */
+
+
+
+
+/** Main menu state machine
+ *  @type {{DISABLED: string, MAIN: string, OPTIONS: string}}
+ *  @memberof Menu */
+const menuState = {
+    DISABLED: 'disabled',
+    MAIN: 'main',
+    OPTIONS: 'options',
+};
+
+/** Main menu items
+ *  @type {Array<string>}
+ *  @memberof Menu */
+let menuItems = [];
+
+/** Current engine menu state
+ *  @type {{state: string, index: Number}}
+ *  @memberof Menu */
+let currentMenuState = {
+    state: menuState.DISABLED,
+    index: 0
+}
+
+
+/** Handle engine main menu
+ *  @memberof Menu */
+function handleMenu()
+{
+    switch (currentMenuState.state)
+    {
+        case menuState.DISABLED:
+        engineCurrentState = engineState.PAUSED;
+        paused = true;
+        currentMenuState.state = menuState.MAIN;
+        menuItems = ['continue', 'options', 'reset game'];
+        break;
+        case menuState.MAIN:
+        switch (currentMenuState.index) {
+            case 0: // select 'continue'
+            currentMenuState.state = menuState.DISABLED;
+            engineCurrentState = engineState.PLAYING;
+            paused = false;
+            break;
+            case 1: // select 'options'
+            currentMenuState.state = menuState.OPTIONS
+            currentMenuState.index = 0;
+            menuItems = [soundOn ? 'sound: on':'sound: off', `volume: ${printVolume()}`, 'back'];
+            break;
+        }
+        break;
+        case menuState.OPTIONS:
+        switch (currentMenuState.index) {
+            case 0: // enable/disable sound
+            soundOn = !soundOn;
+            menuItems[0] = soundOn ? "sound: on" : "sound: off";
+            break;
+            case 2: // select go back
+            currentMenuState.state = menuState.MAIN;
+            currentMenuState.index = 0;
+            menuItems = ['continue', 'options', 'reset game'];
+            break;
+        }
+        break;
+    }
+}
+
+
+/** Draw engine menu
+ *  @memberof Menu */
+function drawEngineMenu()
+{
+    rectfill(23, 43, 80, 36, 0);
+    rect(23, 43, 80, 36, 7);
+
+    // print the menu arrow icon (>)
+    print('~', 27, 50 + currentMenuState.index * 8, 7);
+
+    // print the menu items
+    let y = 0;
+    menuItems.forEach(item => {
+        // push the selected menu forward
+        let x = 0;
+        if (currentMenuState.index === y)
+                x = 1;
+
+        // print the menu item
+        print(item, 32 + x, 50 + y * 8, 7);
+        y += 1;
+    });
+}
+
+/** Update engine menu
+ *  @memberof Menu */
+function updateEngineMenu()
+{
+    // arrow up 
+    if (keyWasPressed(2))
+    {
+        currentMenuState.index -= 1;
+        if (currentMenuState.index < 0)
+            currentMenuState.index = menuItems.length - 1;
+    }
+    
+    // arrow down
+    if (keyWasPressed(3))
+    {
+        currentMenuState.index += 1;
+        if (currentMenuState.index >= menuItems.length)
+            currentMenuState.index = 0;
+    }
+
+    // left and right keys for volume control
+    if (currentMenuState.state === menuState.OPTIONS && currentMenuState.index === 1)
+    {
+        if (keyWasPressed(0))
+            volume = Math.max(0, volume - 1);
+        if (keyWasPressed(1))
+            volume = Math.min(8, volume + 1);
+
+        menuItems[1] =`volume: ${printVolume()}`;
+    }
+}
+
+/** Print volume level
+ *  @memberof Menu */
+function printVolume() { return "0".repeat(volume) + "-".repeat(8-volume); }
+/**
+ * PICO-JS Engine Draw Module
+ * - Handles the drawing of the engine
+ * @namespace Draw
+ */
+
+
+
+
+/** Helper function to draw a circle or a filled circle
+ *  @param {Number} centerX   - Coordinate x of the center of the circle
+ *  @param {Number} centerY   - Coordinate y of the center of the circle
+ *  @param {Number} radius    - Radius of the circle
+ *  @param {String} color     - Color of the circle
+ *  @param {Boolean} [filled] - If true the circle is filled
+ *  @memberof Draw */
+function drawCircle(centerX, centerY, radius, color, filled=false)
+{
+    let x = 0;
+    let y = radius;
+    let decisionParameter = 1 - radius;
+
+    ctx.fillStyle = color;
+  
+    // Plot the initial point
+    if (filled)
+        drawHorizontalLine(centerX - radius, centerX + radius, centerY);
+    else 
+        plotCirclePoints(centerX, centerY, x, y);
+  
+    while (x < y)
+    {
+        x++;
+        if (decisionParameter < 0)
+            decisionParameter += 2 * x + 1;
+        else {
+            y--;
+            decisionParameter += 2 * (x - y) + 1;
+        }
+
+        if (filled)
+        {
+            drawHorizontalLine(centerX - x, centerX + x, centerY + y);
+            drawHorizontalLine(centerX - x, centerX + x, centerY - y);
+            drawHorizontalLine(centerX - y, centerX + y, centerY + x);
+            drawHorizontalLine(centerX - y, centerX + y, centerY - x);
+        }
+        else 
+          plotCirclePoints(centerX, centerY, x, y);
+    }
+}
+  
+
+/** Helper function to plot the pixels of the circunference
+ *  @param {Number} centerX - Coordinate x of the center of the circle
+ *  @param {Number} centerY - Coordinate y of the center of the circle
+ *  @param {Number} x       - Coordinate x of the point in the circunference
+ *  @param {Number} y       - Coordinate y of the point in the circunference
+ *  @memberof Draw */
+function plotCirclePoints(centerX, centerY, x, y)
+{
+    plotPixel(centerX + x, centerY + y);
+    plotPixel(centerX - x, centerY + y);
+    plotPixel(centerX + x, centerY - y);
+    plotPixel(centerX - x, centerY - y);
+    plotPixel(centerX + y, centerY + x);
+    plotPixel(centerX - y, centerY + x);
+    plotPixel(centerX + y, centerY - x);
+    plotPixel(centerX - y, centerY - x);
+}
+ 
+
+/** Helper function to plot a single pixels
+ *  @param {Number} x - Coordinate x of the pixel
+ *  @param {Number} y - Coordinate y of the pixel
+ *  @memberof Draw */
+function plotPixel(x, y) { ctx.fillRect(x, y, 1, 1); }
+
+
+/** Helper function to plot a horizontal line to draw a filled circle
+ *  @param {Number} x1  - Coordinate x of the left side of the horizontal line
+ *  @param {Number} x2  - Coordinate x of the right side of the horizontal line
+ *  @param {Number} y   - Coordinate y of the horizontal line
+ *  @memberof Draw */
+function drawHorizontalLine(x1, x2, y)
+{
+    for (let x = x1; x <= x2; x++)
+        ctx.fillRect(x, y, 1, 1);
+}
+
+/**
+ * PICO-JS Main API
+ * - The main API of the engine
+ * @namespace Api
+ */
+
+
+
+
+/** Clear game screen
+ *  @param {Number} [color] - Color to cover the screen with (defualt=0)
+ *  @memberof Api */
+function cls(color=0)
+{
+    if (color !== bgColor)
+    {
+        bgColor = color;
+        canvas.style.backgroundColor = COLORS[bgColor];
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+
+/** Draw a rectangle
+ *  @param {Number} x - Coordinate x of the top left corner of the rectangle
+ *  @param {Number} y - Coordinate y of the top left corner of the rectangle
+ *  @param {Number} width - Width of the rectangle
+ *  @param {Number} height - Height of the rectangle
+ *  @param {Number} [color] - Color of the rectangle (default=6)
+ *  @example
+ *  rect(10, 10, 50, 30, 7)  // draw a white rectangle at (10,10)
+ *  @memberof Api */
+function rect(x, y, width, height, color=6)
+{
+    x += .5;
+    y += .5;
+    width -= 1;
+    height -= 1;
+
+    if (color === 6)
+    {
+        ctx.strokeRect(x, y, width, height);
+        return;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = COLORS[color];
+    ctx.strokeRect(x, y, width, height);
+    ctx.restore();
+}
+
+
+/** Draw a filled rectangle
+ *  @param {Number} x - Coordinate x of the top left corner of the rectangle
+ *  @param {Number} y - Coordinate y of the top left corner of the rectangle
+ *  @param {Number} width - Width of the rectangle
+ *  @param {Number} height - Height of the rectangle
+ *  @param {Number} [color] - Color of the rectangle (default=6)
+ *  @example
+ *  rectfill(10, 10, 50, 30, 7)  // draw a white filled rectangle at (10,10)
+ *  @memberof Api */
+function rectfill(x, y, width, height, color=6)
+{
+    if (color === 6) {
+        ctx.fillRect(x, y, width, height);
+        return;
+    }
+
+    ctx.save();
+    ctx.fillStyle = COLORS[color];
+    ctx.fillRect(x, y, width, height); 
+    ctx.restore();
+}
+
+
+/** Draw a circle
+ *  @param {Number} x   - Coordinate x of the center of the circle
+ *  @param {Number} y   - Coordinate y of the center of the circle
+ *  @param {Number} radius   - Radius of the circle
+ *  @param {Number} [color] - Color of the circle (default=6)
+ *  @example
+ *  circ(10, 10, 5, 7)  // draw a white circle with center at (10,10)
+ *  @memberof Api */
+function circ(x, y, radius, color=6) { drawCircle(x, y, radius, COLORS[color]); }
+
+
+/** Draw a filled circle
+ *  @param {Number} x   - Coordinate x of the center of the circle
+ *  @param {Number} y   - Coordinate y of the center of the circle
+ *  @param {Number} radius   - Radius of the circle
+ *  @param {Number} [color] - Color of the circle (defualt=6)
+ *  @example
+ *  circfill(10, 10, 5, 7)  // draw a white filled circle with center at (10,10)
+ *  @memberof Api */
+function circfill(x, y, radius, color=6) { drawCircle(x, y, radius, COLORS[color], true);}
+
+
+/** Draw a line
+ *  @param {Number} x0  - Coordinate x of the left side of the line
+ *  @param {Number} y0  - Coordinate y of the left side of the line
+ *  @param {Number} x1  - Coordinate x of the right side of the line
+ *  @param {Number} y1  - Coordinate y of the right side of the line
+ *  @param {Number} [color]   - Color of the line (default=6)
+ *  @example
+ *  line(10, 10, 20, 20, 7)  // draw a white line
+ *  @memberof Api */
+function line(x0, y0, x1, y1, color=6)
+{
+    let dx = Math.abs(x1 - x0);
+    let dy = Math.abs(y1 - y0);
+    let sx = (x0 < x1) ? 1 : -1;
+    let sy = (y0 < y1) ? 1 : -1;
+    let err = (dx > dy ? dx : -dy) / 2;
+
+    ctx.fillStyle = COLORS[color];
+    
+    while (true) 
+    {
+        ctx.fillRect(x0, y0, 1, 1);
+        if (x0 === x1 && y0 === y1) break;
+
+        let e2 = err;
+        if (e2 > -dx)
+        {
+            err -= dy;
+            x0 += sx;
+        }
+
+        if (e2 < dy) 
+        {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+
+/** Draw a sprite on the screen
+ *  @param {Number} n - Index of the sprite
+ *  @param {Number} x  - Coordinate x of the sprite on the screen
+ *  @param {Number} y  - Coordinate y of the sprite on the scree
+ *  @param {Number} [w] - How many sprites wide (default=1)
+ *  @param {Number} [h] - How many sprites high (default=1)
+ *  @example
+ *  spr(0, 10, 20) // draw sprite 0 at position (10,20)
+ *  @memberof Api */
+function spr(n, x, y, w=1, h=1)
+{
+    // check if the sprite is in the range of the sprites: 16x16
+    if (n < 0 || n > 255)
+    {
+        console.error(`Sprite ${n} is out of range`);
+        return;
+    }
+
+    // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight):
+    // Draws a section of the image, defined by (sx, sy, sWidth, sHeight),
+    // onto the canvas at (dx, dy), scaled to dWidth and dHeight.
+
+    const sx = (n % 16) * 8;           // sx of the section of the sprite sheet
+    const sy = Math.floor(n / 16) * 8; // sy of the section of the sprite sheet
+    const sWidth = w * 8;              // sWidth of the section of the sprite sheet
+    const sHeight = h * 8;             // sHeight of the section of the sprite sheet
+
+    ctx.save();
+
+    ctx.drawImage(
+        spritesImg, 
+        sx,           // sx of the section of the sprite sheet
+        sy,           // sy of the section of the sprite sheet
+        sWidth,      // sWidth of the section of the sprite sheet
+        sHeight,      // sHeight of the section of the sprite sheet
+        x,            // dx position in the canvas
+        y,            // dy position in the canvas
+        sWidth,       // scaled width of the sprite
+        sHeight);     // scaled height of the sprite
+
+    ctx.restore();
+}
+
+
+/** Print a string on the screen
+ *  @param {String} str   - String to print
+ *  @param {Number} posX  - Coordinate x of the string on the screen
+ *  @param {Number} posY  - Coordinate y of the string on the scree
+ *  @param {Number} [color]   - Color of the line (default=6)
+ *  @example
+ *  print("hello world", 10, 20, 7) // print the text "hello world"
+ *  @memberof Api */
+function print(str, posX, posY, color=6)
+{
+    ctx.save(); 
+    if (color !== 6)
+        ctx.fillStyle = COLORS[color];
+
+    let needed = [];
+    str = str.toUpperCase();
+
+    for (let i = 0; i < str.length; i++)
+    {
+        let char = engineChars[str.charAt(i)];
+        if (char)
+            needed.push(char);
+    }
+
+    let currX = 0;
+    for (let i = 0; i < needed.length; i++) {
+        let char = needed[i];
+        let currY = 0;
+        let addX = 0;
+
+        for (let y = 0; y < char.length; y++)
+        {
+            let row = char[y];
+            for (let x = 0; x < row.length; x++)
+            {
+                if (row[x])
+                ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
+            }
+            addX = Math.max(addX, row.length);
+            currY += 1;
+        }
+        currX += 1 + addX;
+    }
+    ctx.restore();
+}
+
+
+/** Get button state. Returns true when a button is pressed
+ *  - b=0: left
+ *  - b=1: right
+ *  - b=2: up
+ *  - b=3: down
+ *  - b=4: z
+ *  - b=5: x
+ *  @param {Number} b - Number of the button pressed
+ *  @returns {Boolean}
+ *  @example
+ *  btn(5) // returns true when `x` is pressed
+ *  @memberof Api */
+function btn(b)
+{
+    //if (buttons[b]) return true;
+    //return false;
+    return !paused && keyIsDown(b);
+}
+
+
+/** Returns true when a button is down and it was not down the last frame
+ *  It also returns true every 8 frames it held
+ *  - b=0: left
+ *  - b=1: right
+ *  - b=2: up
+ *  - b=3: down
+ *  - b=4: z
+ *  - b=5: x
+ *  @param {Number} b - Number of the button pressed
+ *  @returns {Boolean}
+ *  @example
+ *  btnp(5) // returns true when `x` is pressed
+ *  @memberof Api */
+function btnp(b)
+{
+  //if (buttons[b]) {
+    // Every time the button is pressed increment the counter.
+    //pressedBtnCounter[b] += 1;
+
+    // Return true only the first time the button is pressed (the counter is 1)
+    //if (pressedBtnCounter[b] === 1) return true;
+    
+    // If the button is still pressed, but the counter reached 30 fps, reset the counter
+    //if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
+    return !paused && keyWasPressed(b);
+  //}
+
+  //return false;
+}
 /** 
  * PICO-JS - A tiny JavaScript Game Engine
  * MIT License - Copyright 2025 Isaac Benitez
@@ -691,6 +1192,17 @@ const engineState = {
  * @memberof Engine */
 let paused = false;
 
+/** Engine volume
+ *  @type {Number}
+ *  @default 4
+ *  @memberof Engine */
+let volume = 4;
+
+/** Engine sound control 
+ *  @type {Boolean}
+ *  @default true 
+ *  @memberof Engine */
+let soundOn = true;
 
 /** Array to keep track of the number of frames that have passed when a button remains pressed
  * @type {Array<Number>}
@@ -890,468 +1402,4 @@ function engineInit(_update, _draw, sprites) {
   window.addEventListener('resize', resizeCanvas);
 
   requestAnimationFrame(gameLoop);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Main engine API
-
-/** Clear game screen
- *  @param {Number} [color] - Color to cover the screen with (defualt=0)
- *  @memberof Engine */
-function cls(color=0) {
-  if (color !== bgColor) {
-    bgColor = color;
-    canvas.style.backgroundColor = COLORS[bgColor];
-  }
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //rectfill(0, 0, canvas.width, canvas.height, color);
-}
-
-/** Draw a rectangle
- *  @param {Number} x - Coordinate x of the top left corner of the rectangle
- *  @param {Number} y - Coordinate y of the top left corner of the rectangle
- *  @param {Number} width - Width of the rectangle
- *  @param {Number} height - Height of the rectangle
- *  @param {Number} [color] - Color of the rectangle (default=6)
- * @example
- * rect(10, 10, 50, 30, 7)  // draw a white rectangle at (10,10)
- * @memberof Engine */
-function rect(x, y, width, height, color=6) {
-    x += .5;
-    y += .5;
-    width -= 1;
-    height -= 1;
-
-    if (color === 6) {
-      ctx.strokeRect(x, y, width, height);
-      return;
-    }
-
-    ctx.save();
-    ctx.strokeStyle = COLORS[color];
-    ctx.strokeRect(x, y, width, height);
-    ctx.restore();
-}
-
-/** Draw a filled rectangle
- *  @param {Number} x - Coordinate x of the top left corner of the rectangle
- *  @param {Number} y - Coordinate y of the top left corner of the rectangle
- *  @param {Number} width - Width of the rectangle
- *  @param {Number} height - Height of the rectangle
- *  @param {Number} [color] - Color of the rectangle (default=6)
- * @example
- * rectfill(10, 10, 50, 30, 7)  // draw a white filled rectangle at (10,10)
- * @memberof Engine */
-function rectfill(x, y, width, height, color=6) {
-    if (color === 6) {
-      ctx.fillRect(x, y, width, height);
-      return;
-    }
-
-    ctx.save();
-    ctx.fillStyle = COLORS[color];
-    ctx.fillRect(x, y, width, height); 
-    ctx.restore();
-}
-
-/** Helper function to draw a circle or a filled circle
- *  @param {Number} centerX   - Coordinate x of the center of the circle
- *  @param {Number} centerY   - Coordinate y of the center of the circle
- *  @param {Number} radius    - Radius of the circle
- *  @param {String} color     - Color of the circle
- *  @param {Boolean} [filled] - If true the circle is filled
- * @memberof Engine */
-function drawCircle(centerX, centerY, radius, color, filled=false) {
-    let x = 0;
-    let y = radius;
-    let decisionParameter = 1 - radius;
-
-    ctx.fillStyle = color;
-  
-    // Plot the initial point
-    if (filled) {
-      drawHorizontalLine(centerX - radius, centerX + radius, centerY);
-    } else {
-      plotCirclePoints(centerX, centerY, x, y);
-    }
-  
-    while (x < y) {
-        x++;
-        if (decisionParameter < 0) {
-            decisionParameter += 2 * x + 1;
-        } else {
-            y--;
-            decisionParameter += 2 * (x - y) + 1;
-        }
-
-        if (filled) {
-          drawHorizontalLine(centerX - x, centerX + x, centerY + y);
-          drawHorizontalLine(centerX - x, centerX + x, centerY - y);
-          drawHorizontalLine(centerX - y, centerX + y, centerY + x);
-          drawHorizontalLine(centerX - y, centerX + y, centerY - x);
-        } else {
-          plotCirclePoints(centerX, centerY, x, y);
-        }
-    }
-}
-  
-/** Helper function to plot the pixels of the circunference
- *  @param {Number} centerX - Coordinate x of the center of the circle
- *  @param {Number} centerY - Coordinate y of the center of the circle
- *  @param {Number} x       - Coordinate x of the point in the circunference
- *  @param {Number} y       - Coordinate y of the point in the circunference
- * @memberof Engine */
-function plotCirclePoints(centerX, centerY, x, y) {
-    plotPixel(centerX + x, centerY + y);
-    plotPixel(centerX - x, centerY + y);
-    plotPixel(centerX + x, centerY - y);
-    plotPixel(centerX - x, centerY - y);
-    plotPixel(centerX + y, centerY + x);
-    plotPixel(centerX - y, centerY + x);
-    plotPixel(centerX + y, centerY - x);
-    plotPixel(centerX - y, centerY - x);
-}
- 
-/** Helper function to plot a single pixels
- *  @param {Number} x - Coordinate x of the pixel
- *  @param {Number} y - Coordinate y of the pixel
- * @memberof Engine */
-function plotPixel(x, y) {
-    ctx.fillRect(x, y, 1, 1);
-}
-
-/** Helper function to plot a horizontal line to draw a filled circle
- *  @param {Number} x1  - Coordinate x of the left side of the horizontal line
- *  @param {Number} x2  - Coordinate x of the right side of the horizontal line
- *  @param {Number} y   - Coordinate y of the horizontal line
- * @memberof Engine */
-function drawHorizontalLine(x1, x2, y) {
-  for (let x = x1; x <= x2; x++) {
-    ctx.fillRect(x, y, 1, 1);
-  }
-}
-
-/** Draw a circle
- *  @param {Number} x   - Coordinate x of the center of the circle
- *  @param {Number} y   - Coordinate y of the center of the circle
- *  @param {Number} radius   - Radius of the circle
- *  @param {Number} [color] - Color of the circle (default=6)
- * @example
- * circ(10, 10, 5, 7)  // draw a white circle with center at (10,10)
- * @memberof Engine */
-function circ(x, y, radius, color=6) {
-    drawCircle(x, y, radius, COLORS[color]);
-}
-
-/** Draw a filled circle
- *  @param {Number} x   - Coordinate x of the center of the circle
- *  @param {Number} y   - Coordinate y of the center of the circle
- *  @param {Number} radius   - Radius of the circle
- *  @param {Number} [color] - Color of the circle (defualt=6)
- * @example
- * circfill(10, 10, 5, 7)  // draw a white filled circle with center at (10,10)
- * @memberof Engine */
-function circfill(x, y, radius, color=6) {
-    drawCircle(x, y, radius, COLORS[color], true);
-}
-
-//function drawPixel(x, y) {
-//  ctx.fillRect(x, y, 1, 1);
-//}
-
-/** Draw a line
- *  @param {Number} x0  - Coordinate x of the left side of the line
- *  @param {Number} y0  - Coordinate y of the left side of the line
- *  @param {Number} x1  - Coordinate x of the right side of the line
- *  @param {Number} y1  - Coordinate y of the right side of the line
- *  @param {Number} [color]   - Color of the line (default=6)
- * @example
- * line(10, 10, 20, 20, 7)  // draw a white line
- * @memberof Engine */
-function line(x0, y0, x1, y1, color=6) {
-  let dx = Math.abs(x1 - x0);
-  let dy = Math.abs(y1 - y0);
-  let sx = (x0 < x1) ? 1 : -1;
-  let sy = (y0 < y1) ? 1 : -1;
-  let err = (dx > dy ? dx : -dy) / 2;
-
-  ctx.fillStyle = COLORS[color];
-  
-  while (true) {
-    ctx.fillRect(x0, y0, 1, 1);
-
-    if (x0 === x1 && y0 === y1) break;
-
-    let e2 = err;
-    if (e2 > -dx) {
-      err -= dy;
-      x0 += sx;
-    }
-    if (e2 < dy) {
-      err += dx;
-      y0 += sy;
-    }
-  }
-}
-
-/** Print a string on the screen
- *  @param {String} str   - String to print
- *  @param {Number} posX  - Coordinate x of the string on the screen
- *  @param {Number} posY  - Coordinate y of the string on the scree
- *  @param {Number} [color]   - Color of the line (default=6)
- * @example
- * print("hello world", 10, 20, 7) // print the text "hello world"
- * @memberof Engine */
-function print(str, posX, posY, color=6) {
-  ctx.save(); 
-  if (color !== 6) ctx.fillStyle = COLORS[color];
-
-  let needed = [];
-  str = str.toUpperCase();
-
-  for (let i = 0; i < str.length; i++) {
-    let char = engineChars[str.charAt(i)];
-    if (char) {
-        needed.push(char);
-    }
-  }
-
-  let currX = 0;
-  for (let i = 0; i < needed.length; i++) {
-    let char = needed[i];
-    let currY = 0;
-    let addX = 0;
-
-    for (let y = 0; y < char.length; y++) {
-      let row = char[y];
-      for (let x = 0; x < row.length; x++) {
-        if (row[x]) {
-          ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
-        }
-      }
-      addX = Math.max(addX, row.length);
-      currY += 1;
-    }
-    currX += 1 + addX;
-  }
-  ctx.restore();
-}
-
-/** Draw a sprite on the screen
- *  @param {Number} n - Index of the sprite
- *  @param {Number} x  - Coordinate x of the sprite on the screen
- *  @param {Number} y  - Coordinate y of the sprite on the scree
- *  @param {Number} [w] - How many sprites wide (default=1)
- *  @param {Number} [h] - How many sprites high (default=1)
- * @example
- * spr(0, 10, 20) // draw sprite 0 at position (10,20)
- * @memberof Engine */
-function spr(n, x, y, w=1, h=1) {
-  // check if the sprite is in the range of the sprites: 16x16
-  if (n < 0 || n > 255) {
-    console.error(`Sprite ${n} is out of range`);
-    return;
-  }
-
-  // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight):
-  // Draws a section of the image, defined by (sx, sy, sWidth, sHeight),
-  // onto the canvas at (dx, dy), scaled to dWidth and dHeight.
-
-  const sx = (n % 16) * 8;           // sx of the section of the sprite sheet
-  const sy = Math.floor(n / 16) * 8; // sy of the section of the sprite sheet
-  const sWidth = w * 8;              // sWidth of the section of the sprite sheet
-  const sHeight = h * 8;             // sHeight of the section of the sprite sheet
-
-  ctx.save();
-
-  ctx.drawImage(
-    spritesImg, 
-    sx,           // sx of the section of the sprite sheet
-    sy,           // sy of the section of the sprite sheet
-    sWidth,      // sWidth of the section of the sprite sheet
-    sHeight,      // sHeight of the section of the sprite sheet
-    x,            // dx position in the canvas
-    y,            // dy position in the canvas
-    sWidth,       // scaled width of the sprite
-    sHeight);     // scaled height of the sprite
-
-    ctx.restore();
-}
-
-/** Main engine state machine
- * @type {{DISABLED: string, MAIN: string, OPTIONS: string}}
- * @memberof Engine */
-const menuState = {
-  DISABLED: 'disabled',
-  MAIN: 'main',
-  OPTIONS: 'options',
-};
-
-/** Main menu items
- * @type {Array<string>}
- * @memberof Engine */
-let menuItems = [];
-
-/** Current engine menu state
- * @type {{state: string, index: Number}}
- * @memberof Engine */
-let currentMenuState = {
-  state: menuState.DISABLED,
-  index: 0
-}
-
-/** Engine volume
- * @type {Number}
- * @default 4
- * @memberof Engine
- */
-let volume = 4;
-
-/** Engine sound control 
- * @type {Boolean}
- * @default true 
- * @memberof Engine
- */
-let soundOn = true;
-
-function printVolume() {
-  return "0".repeat(volume) + "-".repeat(8-volume);
-}
-
-/** Handle engine main menu
- * @memberof Engine */
-function handleMenu() {
-  switch (currentMenuState.state) {
-    case menuState.DISABLED:
-      engineCurrentState = engineState.PAUSED;
-      paused = true;
-      currentMenuState.state = menuState.MAIN;
-      menuItems = ['continue', 'options', 'reset game'];
-      break;
-    case menuState.MAIN:
-      switch (currentMenuState.index) {
-        case 0: // select 'continue'
-          currentMenuState.state = menuState.DISABLED;
-          engineCurrentState = engineState.PLAYING;
-          paused = false;
-          break;
-        case 1: // select 'options'
-          currentMenuState.state = menuState.OPTIONS
-          currentMenuState.index = 0;
-          menuItems = [soundOn ? 'sound: on':'sound: off', `volume: ${printVolume()}`, 'back'];
-          break;
-      }
-      break;
-    case menuState.OPTIONS:
-      switch (currentMenuState.index) {
-        case 0: // enable/disable sound
-          soundOn = !soundOn;
-          menuItems[0] = soundOn ? "sound: on" : "sound: off";
-          break;
-        case 2: // select go back
-          currentMenuState.state = menuState.MAIN;
-          currentMenuState.index = 0;
-          menuItems = ['continue', 'options', 'reset game'];
-          break;
-      }
-      break;
-  }
-}
-
-/** Draw engine menu
- * @memberof Engine */
-function drawEngineMenu() {
-  rectfill(23, 43, 80, 36, 0);
-  rect(23, 43, 80, 36, 7);
-
-  // print the menu arrow icon (>)
-  print('~', 27, 50 + currentMenuState.index * 8, 7);
-
-  // print the menu items
-  let y = 0;
-  menuItems.forEach(item => {
-    // push the selected menu forward
-    let x = 0;
-    if (currentMenuState.index === y) x = 1;
-
-    // print the menu item
-    print(item, 32 + x, 50 + y * 8, 7);
-    y += 1;
-  });
-}
-
-function updateEngineMenu() {
-  // arrow up 
-  if (keyWasPressed(2)) {
-    currentMenuState.index -= 1;
-    if (currentMenuState.index < 0)
-      currentMenuState.index = menuItems.length - 1;
-  }
-  
-  // arrow down
-  if (keyWasPressed(3)) {
-    currentMenuState.index += 1;
-    if (currentMenuState.index >= menuItems.length)
-      currentMenuState.index = 0;
-  }
-
-  // left and right keys for volume control
-  if (currentMenuState.state === menuState.OPTIONS &&
-    currentMenuState.index === 1) {
-    if (keyWasPressed(0))
-      volume = Math.max(0, volume - 1);
-    if (keyWasPressed(1))
-      volume = Math.min(8, volume + 1);
-    menuItems[1] =`volume: ${printVolume()}`;
-  }
-}
-
-/** Get button state. Returns true when a button is pressed
- * - b=0: left
- * - b=1: right
- * - b=2: up
- * - b=3: down
- * - b=4: z
- * - b=5: x
- * @param {Number} b - Number of the button pressed
- * @returns {Boolean}
- * @example
- * btn(5) // returns true when `x` is pressed
- * @memberof Engine */
-function btn(b) {
-  //if (buttons[b]) return true;
-  //return false;
-  return !paused && keyIsDown(b);
-}
-
-/** Returns true when a button is down and it was not down the last frame
- * 
- * It also returns true every 8 frames it held
- * - b=0: left
- * - b=1: right
- * - b=2: up
- * - b=3: down
- * - b=4: z
- * - b=5: x
- * @param {Number} b - Number of the button pressed
- * @returns {Boolean}
- * @example
- * btnp(5) // returns true when `x` is pressed
- * @memberof Engine */
-function btnp(b) {
-  //if (buttons[b]) {
-    // Every time the button is pressed increment the counter.
-    //pressedBtnCounter[b] += 1;
-
-    // Return true only the first time the button is pressed (the counter is 1)
-    //if (pressedBtnCounter[b] === 1) return true;
-    
-    // If the button is still pressed, but the counter reached 30 fps, reset the counter
-    //if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
-    return !paused && keyWasPressed(b);
-  //}
-
-  //return false;
 }
