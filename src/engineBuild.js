@@ -12,6 +12,7 @@
 
 const ENGINE_NAME = 'pico-js';
 const BUILD_FOLDER = 'dist';
+const EXAMPLES_DIRECTORY = 'examples';
 const SOURCE_FOLDER = 'src';
 const engineSourceFiles = [
     `${SOURCE_FOLDER}/engineInput.js`,
@@ -42,6 +43,7 @@ Build
     [...engineSourceFiles],
     [], true
 );
+fs.copyFileSync( `${BUILD_FOLDER}/${ENGINE_NAME}.release.js`, `${EXAMPLES_DIRECTORY}/${ENGINE_NAME}.release.js` );
 
 console.log(`Engine built in ${((Date.now() - startTime)/1e3).toFixed(2)} seconds!`);
 
