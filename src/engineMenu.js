@@ -32,7 +32,7 @@ let currentMenuState = {
 
 /** Handle engine main menu
  *  @memberof Menu */
-function handleMenu()
+export function handle()
 {
     switch (currentMenuState.state)
     {
@@ -75,7 +75,7 @@ function handleMenu()
 
 /** Draw engine menu
  *  @memberof Menu */
-function drawEngineMenu()
+export function draw()
 {
     rectfill(23, 43, 80, 36, 0);
     rect(23, 43, 80, 36, 7);
@@ -99,7 +99,7 @@ function drawEngineMenu()
 
 /** Update engine menu
  *  @memberof Menu */
-function updateEngineMenu()
+export function update()
 {
     // arrow up 
     if (keyWasPressed(2))

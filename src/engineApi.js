@@ -4,20 +4,27 @@
  * @namespace Api
  */
 
-'use strict';
+import * as Draw from "./engineDraw";
+import * as Engine from './engine';
+import { keyIsDown, keyWasPressed } from "./engineInput";
+import { COLORS } from "./constants";
 
+/** Startup PICO-JS engine
+ * @param {Function} update - Called every frame to update the game objects
+ * @param {Function} draw - Called every frame to render the game objects
+ * @param {{[key: string]: number[][]}} sprites - Contains the sprites to be used in the game
+ * @memberof Api
+ */
+export function engineInit( update, draw, sprites ) {
+    Engine.init( update, draw, sprites );
+}
 
 /** Clear game screen
  *  @param {Number} [color] - Color to cover the screen with (defualt=0)
  *  @memberof Api */
-function cls(color=0)
+export function cls( color=0 )
 {
-    if (color !== bgColor)
-    {
-        bgColor = color;
-        canvas.style.backgroundColor = COLORS[bgColor];
-    }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    Draw.clearScreen( color );
 }
 
 
@@ -81,7 +88,9 @@ function rectfill(x, y, width, height, color=6)
  *  @example
  *  circ(10, 10, 5, 7)  // draw a white circle with center at (10,10)
  *  @memberof Api */
-function circ(x, y, radius, color=6) { drawCircle(x, y, radius, COLORS[color]); }
+export function circ( x, y, radius, color=6 ) {
+    Draw.circle( x, y, radius, COLORS[ color ] );
+}
 
 
 /** Draw a filled circle
@@ -92,7 +101,9 @@ function circ(x, y, radius, color=6) { drawCircle(x, y, radius, COLORS[color]); 
  *  @example
  *  circfill(10, 10, 5, 7)  // draw a white filled circle with center at (10,10)
  *  @memberof Api */
-function circfill(x, y, radius, color=6) { drawCircle(x, y, radius, COLORS[color], true);}
+export function circfill(x, y, radius, color=6) {
+    Draw.circle( x, y, radius, COLORS[ color ], true );
+}
 
 
 /** Draw a line
@@ -104,34 +115,9 @@ function circfill(x, y, radius, color=6) { drawCircle(x, y, radius, COLORS[color
  *  @example
  *  line(10, 10, 20, 20, 7)  // draw a white line
  *  @memberof Api */
-function line(x0, y0, x1, y1, color=6)
+export function line( x0, y0, x1, y1, color=6 )
 {
-    let dx = Math.abs(x1 - x0);
-    let dy = Math.abs(y1 - y0);
-    let sx = (x0 < x1) ? 1 : -1;
-    let sy = (y0 < y1) ? 1 : -1;
-    let err = (dx > dy ? dx : -dy) / 2;
-
-    ctx.fillStyle = COLORS[color];
-    
-    while (true) 
-    {
-        ctx.fillRect(x0, y0, 1, 1);
-        if (x0 === x1 && y0 === y1) break;
-
-        let e2 = err;
-        if (e2 > -dx)
-        {
-            err -= dy;
-            x0 += sx;
-        }
-
-        if (e2 < dy) 
-        {
-            err += dx;
-            y0 += sy;
-        }
-    }
+    Draw.line( x0, y0, x1, y1, color );
 }
 
 
@@ -144,38 +130,9 @@ function line(x0, y0, x1, y1, color=6)
  *  @example
  *  spr(0, 10, 20) // draw sprite 0 at position (10,20)
  *  @memberof Api */
-function spr(n, x, y, w=1, h=1)
+export function spr(n, x, y, w=1, h=1)
 {
-    // check if the sprite is in the range of the sprites: 16x16
-    if (n < 0 || n > 255)
-    {
-        console.error(`Sprite ${n} is out of range`);
-        return;
-    }
-
-    // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight):
-    // Draws a section of the image, defined by (sx, sy, sWidth, sHeight),
-    // onto the canvas at (dx, dy), scaled to dWidth and dHeight.
-
-    const sx = (n % 16) * 8;           // sx of the section of the sprite sheet
-    const sy = Math.floor(n / 16) * 8; // sy of the section of the sprite sheet
-    const sWidth = w * 8;              // sWidth of the section of the sprite sheet
-    const sHeight = h * 8;             // sHeight of the section of the sprite sheet
-
-    ctx.save();
-
-    ctx.drawImage(
-        spritesImg, 
-        sx,           // sx of the section of the sprite sheet
-        sy,           // sy of the section of the sprite sheet
-        sWidth,      // sWidth of the section of the sprite sheet
-        sHeight,      // sHeight of the section of the sprite sheet
-        x,            // dx position in the canvas
-        y,            // dy position in the canvas
-        sWidth,       // scaled width of the sprite
-        sHeight);     // scaled height of the sprite
-
-    ctx.restore();
+    Draw.sprite( n, x, y, w, h );
 }
 
 
@@ -187,42 +144,9 @@ function spr(n, x, y, w=1, h=1)
  *  @example
  *  print("hello world", 10, 20, 7) // print the text "hello world"
  *  @memberof Api */
-function print(str, posX, posY, color=6)
+export function print(str, posX, posY, color=6)
 {
-    ctx.save(); 
-    if (color !== 6)
-        ctx.fillStyle = COLORS[color];
-
-    let needed = [];
-    str = str.toUpperCase();
-
-    for (let i = 0; i < str.length; i++)
-    {
-        let char = engineChars[str.charAt(i)];
-        if (char)
-            needed.push(char);
-    }
-
-    let currX = 0;
-    for (let i = 0; i < needed.length; i++) {
-        let char = needed[i];
-        let currY = 0;
-        let addX = 0;
-
-        for (let y = 0; y < char.length; y++)
-        {
-            let row = char[y];
-            for (let x = 0; x < row.length; x++)
-            {
-                if (row[x])
-                ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
-            }
-            addX = Math.max(addX, row.length);
-            currY += 1;
-        }
-        currX += 1 + addX;
-    }
-    ctx.restore();
+    Draw.text( str, posX, posY, color );
 }
 
 
@@ -238,11 +162,11 @@ function print(str, posX, posY, color=6)
  *  @example
  *  btn(5) // returns true when `x` is pressed
  *  @memberof Api */
-function btn(b)
+export function btn(b)
 {
     //if (buttons[b]) return true;
     //return false;
-    return !paused && keyIsDown(b);
+    return ! Engine.paused && keyIsDown(b);
 }
 
 
@@ -270,7 +194,7 @@ function btnp(b)
     
     // If the button is still pressed, but the counter reached 30 fps, reset the counter
     //if (pressedBtnCounter[b] >= 15) pressedBtnCounter[b] = 0;
-    return !paused && keyWasPressed(b);
+    return ! Engine.paused && keyWasPressed(b);
   //}
 
   //return false;

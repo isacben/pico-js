@@ -4,23 +4,23 @@
  * @namespace Input
  */
 
-'use strict';
+import { handle as handleMenu } from "./engineMenu";
 
 /** Returns true if the button is down
  * @param {Number} b
  * @returns {Boolean}
  * @memberof Input */
-function keyIsDown(b) { return !!(buttons[b] & 1) }
+export function keyIsDown(b) { return !!(buttons[b] & 1) }
 
 /** Returns true if the button was pressed this frame
  * @param {Number} b
  * @returns {Boolean} 
  * @memberof Input */
-function keyWasPressed(b) { return !!(buttons[b] & 2); }
+export function keyWasPressed(b) { return !!(buttons[b] & 2); }
 
 /** Clears all inputs
  * @memberof Input */
-function clearInput() { buttons = [0, 0, 0, 0, 0]; }
+export function clearInput() { buttons = [0, 0, 0, 0, 0]; }
 
 /** Array of the available buttons in the engine
  * - 0: left
@@ -36,7 +36,7 @@ let buttons = [0,0,0,0,0];
 //////////////////////////////////////////////////
 // Input update called by the engine
 
-function inputUpdate()
+export function update()
 {
   if (!document.hasFocus()) {
     // if the document is not focused, clear all inputs
@@ -44,7 +44,7 @@ function inputUpdate()
   }
 }
 
-function inputUpdatePost()
+export function updatePost()
 {
   for (const b in buttons)
     buttons[b] &= 1;
@@ -53,7 +53,7 @@ function inputUpdatePost()
 //////////////////////////////////////////////////
 // Input event handlers
 
-function inputInit()
+export function init()
 {
   onkeydown = (e) =>
   {
