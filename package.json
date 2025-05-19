@@ -23,7 +23,7 @@
     "url": "https://github.com/isacben/pico-js/issues"
   },
   "scripts": {
-    "build": "node src/engineBuild.js"
+    "build": "node engineBuild.js"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
