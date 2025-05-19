@@ -458,3 +458,5 @@ const engineChars = {
     [,,,]
   ],
 }
+
+export { engineChars };

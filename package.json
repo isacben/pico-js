@@ -26,6 +26,7 @@
     "build": "node engineBuild.js"
   },
   "devDependencies": {
+    "esbuild": "^0.25.4",
     "typescript": "^5.8.3"
   }
 }
