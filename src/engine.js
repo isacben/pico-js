@@ -23,7 +23,7 @@ const engineName = 'PICO-JS';
 const engineVersion = '0.1.0';
 
 /** Array containing the engine colors
- *  @type {Array}
+ *  @type {Array<String>}
  *  @memberof Engine */
 const COLORS = [
   "#000000", "#1D2B53", "#7E2553", "#008751", 
@@ -155,10 +155,28 @@ let previousTime = performance.now();
 let canvas;
 canvas = document.createElement('canvas');
 
+const styleRoot =
+    'display: flex;' +
+    'flex-direction: column;' +
+    'justify-content: center;' +
+    'align-items: center;' +
+    'image-rendering: optimizeSpeed;' +
+    'image-rendering: -moz-crisp-edges;' +
+    'image-rendering: -o-crisp-edges;' +
+    'image-rendering: -webkit-optimize-contrast;' +
+    'image-rendering: optimize-contrast;' +
+    'image-rendering: pixelated;' +
+    '-ms-interpolation-mode: nearest-neighbor;' +
+    'border: 0px;' +
+    'cursor: none;' +
+    'font-smooth: never;' +
+    '-webkit-font-smoothing : none;';
+
 /** Game area
  * @type {HTMLElement}
  * @memberof Engine */
-const rootElement = document.getElementById('game');
+const rootElement = document.body;
+rootElement.style.cssText = styleRoot;
 rootElement.appendChild(canvas);
 
 /** Main canvas context
@@ -174,8 +192,8 @@ const ratio = window.devicePixelRatio || 1;
 
 canvas.width = cWidth * ratio;
 canvas.height = cHeight * ratio; 
-ctx.imageSmoothingEnabled = false;
 canvas.style.backgroundColor = COLORS[bgColor];
+ctx.imageSmoothingEnabled = false;
 ctx.scale(ratio,ratio);
 
 /** Sprite sheet image
@@ -214,7 +232,7 @@ function drawSprites(sprites) {
       currY += 1;
     }
   });
-  c.drawImage(spritesImg, 0, 0, 128, 128);
+  c.drawImage(spritesImg, 0, 0, 127, 127);
   spritesImg.src = spritesCanvas.toDataURL();
 }
 
