@@ -725,6 +725,75 @@ function printVolume() { return "0".repeat(volume) + "-".repeat(8-volume); }
 
 
 
+/** Size of the tiles
+ * @type {Number}
+ * @default 8
+ * @memberof Draw */
+const TILE_SIZE = 8;
+
+/** The native game canvas width size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Draw */
+const NATIVE_WIDTH = TILE_SIZE * 16;
+
+/** The native game canvas height size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Draw */
+const NATIVE_HEIGHT = TILE_SIZE * 16;
+
+/** Canvas virtual width
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+let cWidth = NATIVE_WIDTH;
+
+/** Canvas virtual height
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+let cHeight = NATIVE_HEIGHT; 
+
+/** Max multiplier to control the size of the main canvas
+ * @type {Number}
+ * @default 10
+ * @memberof Draw */
+const maxMultiplier = 10;
+
+/** Max virtual width of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof  Draw */
+const maxWidth = NATIVE_WIDTH * maxMultiplier;
+
+/** Max virtual height of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+const maxHeight = NATIVE_HEIGHT * maxMultiplier;
+
+/** Value to adjust the virtual size of the canvas in the window
+ * @type {Number}
+ * @default 0.9
+ * @memberof Draw */
+const windowPercentage = 0.9;
+
+/** Device pixel ratio
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+const ratio = window.devicePixelRatio || 1;
+
+/** Main Canvas
+ * @type {HTMLCanvasElement}
+ * @memberof Draw */
+let mainCanvas;
+
+/** Main canvas context
+ * @type {CanvasRenderingContext2D}
+ * @memberof Engine */
+let mainContext;
 
 /** Helper function to draw a circle or a filled circle
  *  @param {Number} centerX   - Coordinate x of the center of the circle
@@ -739,7 +808,7 @@ function drawCircle(centerX, centerY, radius, color, filled=false)
     let y = radius;
     let decisionParameter = 1 - radius;
 
-    ctx.fillStyle = color;
+    mainContext.fillStyle = color;
   
     // Plot the initial point
     if (filled)
@@ -793,7 +862,7 @@ function plotCirclePoints(centerX, centerY, x, y)
  *  @param {Number} x - Coordinate x of the pixel
  *  @param {Number} y - Coordinate y of the pixel
  *  @memberof Draw */
-function plotPixel(x, y) { ctx.fillRect(x, y, 1, 1); }
+function plotPixel(x, y) { mainContext.fillRect(x, y, 1, 1); }
 
 
 /** Helper function to plot a horizontal line to draw a filled circle
@@ -804,7 +873,7 @@ function plotPixel(x, y) { ctx.fillRect(x, y, 1, 1); }
 function drawHorizontalLine(x1, x2, y)
 {
     for (let x = x1; x <= x2; x++)
-        ctx.fillRect(x, y, 1, 1);
+        mainContext.fillRect(x, y, 1, 1);
 }
 
 /**
@@ -824,9 +893,9 @@ function cls(color=0)
     if (color !== bgColor)
     {
         bgColor = color;
-        canvas.style.backgroundColor = COLORS[bgColor];
+        mainCanvas.style.backgroundColor = COLORS[bgColor];
     }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    mainContext.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
 
 
@@ -848,14 +917,14 @@ function rect(x, y, width, height, color=6)
 
     if (color === 6)
     {
-        ctx.strokeRect(x, y, width, height);
+        mainContext.strokeRect(x, y, width, height);
         return;
     }
 
-    ctx.save();
-    ctx.strokeStyle = COLORS[color];
-    ctx.strokeRect(x, y, width, height);
-    ctx.restore();
+    mainContext.save();
+    mainContext.strokeStyle = COLORS[color];
+    mainContext.strokeRect(x, y, width, height);
+    mainContext.restore();
 }
 
 
@@ -871,14 +940,14 @@ function rect(x, y, width, height, color=6)
 function rectfill(x, y, width, height, color=6)
 {
     if (color === 6) {
-        ctx.fillRect(x, y, width, height);
+        mainContext.fillRect(x, y, width, height);
         return;
     }
 
-    ctx.save();
-    ctx.fillStyle = COLORS[color];
-    ctx.fillRect(x, y, width, height); 
-    ctx.restore();
+    mainContext.save();
+    mainContext.fillStyle = COLORS[color];
+    mainContext.fillRect(x, y, width, height); 
+    mainContext.restore();
 }
 
 
@@ -921,11 +990,11 @@ function line(x0, y0, x1, y1, color=6)
     let sy = (y0 < y1) ? 1 : -1;
     let err = (dx > dy ? dx : -dy) / 2;
 
-    ctx.fillStyle = COLORS[color];
+    mainContext.fillStyle = COLORS[color];
     
     while (true) 
     {
-        ctx.fillRect(x0, y0, 1, 1);
+        mainContext.fillRect(x0, y0, 1, 1);
         if (x0 === x1 && y0 === y1) break;
 
         let e2 = err;
@@ -971,9 +1040,9 @@ function spr(n, x, y, w=1, h=1)
     const sWidth = w * 8;              // sWidth of the section of the sprite sheet
     const sHeight = h * 8;             // sHeight of the section of the sprite sheet
 
-    ctx.save();
+    mainContext.save();
 
-    ctx.drawImage(
+    mainContext.drawImage(
         spritesImg, 
         sx,           // sx of the section of the sprite sheet
         sy,           // sy of the section of the sprite sheet
@@ -984,7 +1053,7 @@ function spr(n, x, y, w=1, h=1)
         sWidth,       // scaled width of the sprite
         sHeight);     // scaled height of the sprite
 
-    ctx.restore();
+    mainContext.restore();
 }
 
 
@@ -998,9 +1067,9 @@ function spr(n, x, y, w=1, h=1)
  *  @memberof Api */
 function print(str, posX, posY, color=6)
 {
-    ctx.save(); 
+    mainContext.save(); 
     if (color !== 6)
-        ctx.fillStyle = COLORS[color];
+        mainContext.fillStyle = COLORS[color];
 
     let needed = [];
     str = str.toUpperCase();
@@ -1024,14 +1093,14 @@ function print(str, posX, posY, color=6)
             for (let x = 0; x < row.length; x++)
             {
                 if (row[x])
-                ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
+                mainContext.fillRect(posX + currX + x, posY + currY, 1, 1);
             }
             addX = Math.max(addX, row.length);
             currY += 1;
         }
         currX += 1 + addX;
     }
-    ctx.restore();
+    mainContext.restore();
 }
 
 
@@ -1128,54 +1197,6 @@ const frameRate = 60;
 // Frame time tracking
 let frameTimeLastMS = 0, frameTimeBufferMS = 0, averageFPS = 0;
 
-/** Browser window marging
- * @type {Number}
- * @default 50
- * @memberof Engine */
-const WINDOW_MARGIN = 50;
-
-/** Size of the tiles
- * @type {Number}
- * @default 8
- * @memberof Engine */
-const TILE_SIZE = 8;
-
-/** The native game canvas width size in pixels
- * @type {Number}
- * @default 128
- * @memberof Engine */
-const NATIVE_WIDTH = TILE_SIZE * 16;
-
-/** The native game canvas height size in pixels
- * @type {Number}
- * @default 128
- * @memberof Engine */
-const NATIVE_HEIGHT = TILE_SIZE * 16;
-
-/** Max multiplier to control the size of the main canvas
- * @type {Number}
- * @default 10
- * @memberof Engine */
-const maxMultiplier = 10;
-
-/** Max virtual width of the main canvas
- * @type {Number}
- * @default
- * @memberof Engine */
-const maxWidth = NATIVE_WIDTH * maxMultiplier;
-
-/** Max virtual height of the main canvas
- * @type {Number}
- * @default
- * @memberof Engine */
-const maxHeight = NATIVE_HEIGHT * maxMultiplier;
-
-/** Value to adjust the virtual size of the canvas in the window
- * @type {Number}
- * @default 0.9
- * @memberof Engine */
-const windowPercentage = 0.9;
-
 /** Main engine state machine
  * @type {{PLAYING: string, PAUSED: string, MENU: string, RESET: string}}
  * @memberof Engine */
@@ -1219,68 +1240,6 @@ let engineCurrentState = engineState.PLAYING;
  *  @type {Boolean}
  *  @memberof Engine */
 let preventDefaultInput = false;
-
-/** Canvas virtual width
- * @type {Number}
- * @default
- * @memberof Engine */
-let cWidth = NATIVE_WIDTH;
-
-/** Canvas virtual height
- * @type {Number}
- * @default
- * @memberof Engine */
-let cHeight = NATIVE_HEIGHT; 
-
-let accumulator = 0;
-let previousTime = performance.now();
-
-/** Main Canvas
- * @type {HTMLCanvasElement}
- * @memberof Engine */
-let canvas;
-canvas = document.createElement('canvas');
-
-const styleRoot =
-    'display: flex;' +
-    'flex-direction: column;' +
-    'justify-content: center;' +
-    'align-items: center;' +
-    'image-rendering: optimizeSpeed;' +
-    'image-rendering: -moz-crisp-edges;' +
-    'image-rendering: -o-crisp-edges;' +
-    'image-rendering: -webkit-optimize-contrast;' +
-    'image-rendering: optimize-contrast;' +
-    'image-rendering: pixelated;' +
-    '-ms-interpolation-mode: nearest-neighbor;' +
-    'border: 0px;' +
-    'cursor: none;' +
-    'font-smooth: never;' +
-    '-webkit-font-smoothing : none;';
-
-/** Game area
- * @type {HTMLElement}
- * @memberof Engine */
-const rootElement = document.body;
-rootElement.style.cssText = styleRoot;
-rootElement.appendChild(canvas);
-
-/** Main canvas context
- * @type {CanvasRenderingContext2D}
- * @memberof Engine */
-const ctx = canvas.getContext("2d", { alpha: true });
-
-/** Device pixel ratio
- * @type {Number}
- * @default
- * @memberof Engine */
-const ratio = window.devicePixelRatio || 1;
-
-canvas.width = cWidth * ratio;
-canvas.height = cHeight * ratio; 
-canvas.style.backgroundColor = COLORS[bgColor];
-ctx.imageSmoothingEnabled = false;
-ctx.scale(ratio,ratio);
 
 /** Sprite sheet image
  * @type {HTMLImageElement}
@@ -1333,91 +1292,121 @@ function lerp(percent, valueA, valueB) { return valueA + clamp(percent) * (value
  */
 function engineInit(_update, _draw, sprites) {
 
-  // Resize main canvas based on the browser window size
-  function resizeCanvas() {
-      cWidth = window.innerWidth;
-      cHeight = window.innerHeight;
+    // Resize main canvas based on the browser window size
+    function resizeCanvas() {
+        cWidth = window.innerWidth;
+        cHeight = window.innerHeight;
 
-      const nativeRatio = NATIVE_WIDTH / NATIVE_HEIGHT;
-      const browserWindowRatio = cWidth / cHeight;
+        const nativeRatio = NATIVE_WIDTH / NATIVE_HEIGHT;
+        const browserWindowRatio = cWidth / cHeight;
 
-      // browser window is too wide
-      if (browserWindowRatio > nativeRatio) {
+        // browser window is too wide
+        if (browserWindowRatio > nativeRatio) {
         cHeight = Math.floor(cHeight * windowPercentage); // optional
         if (cHeight > maxWidth) cHeight = maxHeight; // optional
-    
+
         cWidth = Math.floor(cHeight * nativeRatio);
-      } else {
+        } else {
         // browser window is too high
         cWidth = Math.floor(cWidth * windowPercentage); // optional
         if (cWidth > maxWidth) cWidth = maxWidth; // optional
 
         cHeight = Math.floor(cWidth / nativeRatio);
-      }
+        }
 
-      ctx.canvas.style.width = `${cWidth}px`;
-      ctx.canvas.style.height = `${cHeight}px`;
+        mainContext.canvas.style.width = `${cWidth}px`;
+        mainContext.canvas.style.height = `${cHeight}px`;
 
-      //_draw();
-      //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
-  }
-
-  // Main engine game loop
-  function gameLoop(frameTimeMS=0) {
-    const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
-    frameTimeLastMS = frameTimeMS;
-    
-    // show debug panel here
-    // TODO
-    averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
-
-    //frameTimeBufferMS += frameTimeDeltaMS;
-    frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
-
-    resizeCanvas();
-
-    if (paused) {
-      // TODO: draw menu in overlay canvas
-      inputUpdate();
-      updateEngineMenu();
-      inputUpdatePost();
+        //_draw();
+        //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
     }
-    else {
-      // apply time delta smoothing, improves smoothness of framerate in some browsers
-      let deltaSmooth = 0;
-      if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
-      {
-          // force at least one update each frame since it is waiting for refresh
-          deltaSmooth = frameTimeBufferMS;
-          frameTimeBufferMS = 0;
-      }
 
-      // update game state
-      // update multiple frames if necessary in case of slow framerate
-      for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate) {
+    // Main engine game loop
+    function gameLoop(frameTimeMS=0) {
+        const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
+        frameTimeLastMS = frameTimeMS;
+        
+        // show debug panel here
+        // TODO
+        averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
+
+        //frameTimeBufferMS += frameTimeDeltaMS;
+        frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
+
+        resizeCanvas();
+
+        if (paused) {
+        // TODO: draw menu in overlay canvas
         inputUpdate();
-        _update();
+        updateEngineMenu();
         inputUpdatePost();
-      }
+        }
+        else {
+        // apply time delta smoothing, improves smoothness of framerate in some browsers
+        let deltaSmooth = 0;
+        if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
+        {
+            // force at least one update each frame since it is waiting for refresh
+            deltaSmooth = frameTimeBufferMS;
+            frameTimeBufferMS = 0;
+        }
 
-      // add the time smoothing back in
-      frameTimeBufferMS += deltaSmooth;
+        // update game state
+        // update multiple frames if necessary in case of slow framerate
+        for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate) {
+            inputUpdate();
+            _update();
+            inputUpdatePost();
+        }
+
+        // add the time smoothing back in
+        frameTimeBufferMS += deltaSmooth;
+        }
+
+        _draw();
+        print(`FPS: ${Math.floor(averageFPS)}`, 0, 0);
+        // TODO: remove when there is an overlay canvas
+        if (paused) drawEngineMenu();
+
+        requestAnimationFrame(gameLoop);
     }
+  
+    // Setup the html file
 
-    _draw();
-    print(`FPS: ${Math.floor(averageFPS)}`, 0, 0);
-    // TODO: remove when there is an overlay canvas
-    if (paused) drawEngineMenu();
+    const rootElement = document.body;
+    const styleRoot =
+        'display: flex;' +
+        'flex-direction: column;' +
+        'justify-content: center;' +
+        'align-items: center;' +
+        'image-rendering: optimizeSpeed;' +
+        'image-rendering: -moz-crisp-edges;' +
+        'image-rendering: -o-crisp-edges;' +
+        'image-rendering: -webkit-optimize-contrast;' +
+        'image-rendering: optimize-contrast;' +
+        'image-rendering: pixelated;' +
+        '-ms-interpolation-mode: nearest-neighbor;' +
+        'border: 0px;' +
+        'cursor: none;' +
+        'font-smooth: never;' +
+        '-webkit-font-smoothing : none;';
+    rootElement.style.cssText = styleRoot;
+    mainCanvas = document.createElement('canvas');
+    rootElement.appendChild(mainCanvas);
+    mainContext = mainCanvas.getContext("2d", { alpha: true });
+    mainCanvas.width = cWidth * ratio;
+    mainCanvas.height = cHeight * ratio; 
+    mainCanvas.style.backgroundColor = COLORS[bgColor];
+    mainContext.imageSmoothingEnabled = false;
+    mainContext.scale(ratio,ratio);
+    mainContext.fillStyle = COLORS[6]; // default color
+    mainContext.strokeStyle = COLORS[6]; // default color
+
+    inputInit();
+    drawSprites(sprites);
+
+    window.addEventListener('resize', resizeCanvas);
 
     requestAnimationFrame(gameLoop);
-  }
-  
-  inputInit();
-  drawSprites(sprites);
-  ctx.fillStyle = COLORS[6]; // default color
-  ctx.strokeStyle = COLORS[6]; // default color
-
-  window.addEventListener('resize', resizeCanvas);
-
-  requestAnimationFrame(gameLoop);
 }
+

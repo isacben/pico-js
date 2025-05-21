@@ -42,54 +42,6 @@ const frameRate = 60;
 // Frame time tracking
 let frameTimeLastMS = 0, frameTimeBufferMS = 0, averageFPS = 0;
 
-/** Browser window marging
- * @type {Number}
- * @default 50
- * @memberof Engine */
-const WINDOW_MARGIN = 50;
-
-/** Size of the tiles
- * @type {Number}
- * @default 8
- * @memberof Engine */
-const TILE_SIZE = 8;
-
-/** The native game canvas width size in pixels
- * @type {Number}
- * @default 128
- * @memberof Engine */
-const NATIVE_WIDTH = TILE_SIZE * 16;
-
-/** The native game canvas height size in pixels
- * @type {Number}
- * @default 128
- * @memberof Engine */
-const NATIVE_HEIGHT = TILE_SIZE * 16;
-
-/** Max multiplier to control the size of the main canvas
- * @type {Number}
- * @default 10
- * @memberof Engine */
-const maxMultiplier = 10;
-
-/** Max virtual width of the main canvas
- * @type {Number}
- * @default
- * @memberof Engine */
-const maxWidth = NATIVE_WIDTH * maxMultiplier;
-
-/** Max virtual height of the main canvas
- * @type {Number}
- * @default
- * @memberof Engine */
-const maxHeight = NATIVE_HEIGHT * maxMultiplier;
-
-/** Value to adjust the virtual size of the canvas in the window
- * @type {Number}
- * @default 0.9
- * @memberof Engine */
-const windowPercentage = 0.9;
-
 /** Main engine state machine
  * @type {{PLAYING: string, PAUSED: string, MENU: string, RESET: string}}
  * @memberof Engine */
@@ -133,68 +85,6 @@ let engineCurrentState = engineState.PLAYING;
  *  @type {Boolean}
  *  @memberof Engine */
 let preventDefaultInput = false;
-
-/** Canvas virtual width
- * @type {Number}
- * @default
- * @memberof Engine */
-let cWidth = NATIVE_WIDTH;
-
-/** Canvas virtual height
- * @type {Number}
- * @default
- * @memberof Engine */
-let cHeight = NATIVE_HEIGHT; 
-
-let accumulator = 0;
-let previousTime = performance.now();
-
-/** Main Canvas
- * @type {HTMLCanvasElement}
- * @memberof Engine */
-let canvas;
-canvas = document.createElement('canvas');
-
-const styleRoot =
-    'display: flex;' +
-    'flex-direction: column;' +
-    'justify-content: center;' +
-    'align-items: center;' +
-    'image-rendering: optimizeSpeed;' +
-    'image-rendering: -moz-crisp-edges;' +
-    'image-rendering: -o-crisp-edges;' +
-    'image-rendering: -webkit-optimize-contrast;' +
-    'image-rendering: optimize-contrast;' +
-    'image-rendering: pixelated;' +
-    '-ms-interpolation-mode: nearest-neighbor;' +
-    'border: 0px;' +
-    'cursor: none;' +
-    'font-smooth: never;' +
-    '-webkit-font-smoothing : none;';
-
-/** Game area
- * @type {HTMLElement}
- * @memberof Engine */
-const rootElement = document.body;
-rootElement.style.cssText = styleRoot;
-rootElement.appendChild(canvas);
-
-/** Main canvas context
- * @type {CanvasRenderingContext2D}
- * @memberof Engine */
-const ctx = canvas.getContext("2d", { alpha: true });
-
-/** Device pixel ratio
- * @type {Number}
- * @default
- * @memberof Engine */
-const ratio = window.devicePixelRatio || 1;
-
-canvas.width = cWidth * ratio;
-canvas.height = cHeight * ratio; 
-canvas.style.backgroundColor = COLORS[bgColor];
-ctx.imageSmoothingEnabled = false;
-ctx.scale(ratio,ratio);
 
 /** Sprite sheet image
  * @type {HTMLImageElement}
@@ -247,91 +137,120 @@ function lerp(percent, valueA, valueB) { return valueA + clamp(percent) * (value
  */
 function engineInit(_update, _draw, sprites) {
 
-  // Resize main canvas based on the browser window size
-  function resizeCanvas() {
-      cWidth = window.innerWidth;
-      cHeight = window.innerHeight;
+    // Resize main canvas based on the browser window size
+    function resizeCanvas() {
+        cWidth = window.innerWidth;
+        cHeight = window.innerHeight;
 
-      const nativeRatio = NATIVE_WIDTH / NATIVE_HEIGHT;
-      const browserWindowRatio = cWidth / cHeight;
+        const nativeRatio = NATIVE_WIDTH / NATIVE_HEIGHT;
+        const browserWindowRatio = cWidth / cHeight;
 
-      // browser window is too wide
-      if (browserWindowRatio > nativeRatio) {
+        // browser window is too wide
+        if (browserWindowRatio > nativeRatio) {
         cHeight = Math.floor(cHeight * windowPercentage); // optional
         if (cHeight > maxWidth) cHeight = maxHeight; // optional
-    
+
         cWidth = Math.floor(cHeight * nativeRatio);
-      } else {
+        } else {
         // browser window is too high
         cWidth = Math.floor(cWidth * windowPercentage); // optional
         if (cWidth > maxWidth) cWidth = maxWidth; // optional
 
         cHeight = Math.floor(cWidth / nativeRatio);
-      }
+        }
 
-      ctx.canvas.style.width = `${cWidth}px`;
-      ctx.canvas.style.height = `${cHeight}px`;
+        mainContext.canvas.style.width = `${cWidth}px`;
+        mainContext.canvas.style.height = `${cHeight}px`;
 
-      //_draw();
-      //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
-  }
-
-  // Main engine game loop
-  function gameLoop(frameTimeMS=0) {
-    const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
-    frameTimeLastMS = frameTimeMS;
-    
-    // show debug panel here
-    // TODO
-    averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
-
-    //frameTimeBufferMS += frameTimeDeltaMS;
-    frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
-
-    resizeCanvas();
-
-    if (paused) {
-      // TODO: draw menu in overlay canvas
-      inputUpdate();
-      updateEngineMenu();
-      inputUpdatePost();
+        //_draw();
+        //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
     }
-    else {
-      // apply time delta smoothing, improves smoothness of framerate in some browsers
-      let deltaSmooth = 0;
-      if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
-      {
-          // force at least one update each frame since it is waiting for refresh
-          deltaSmooth = frameTimeBufferMS;
-          frameTimeBufferMS = 0;
-      }
 
-      // update game state
-      // update multiple frames if necessary in case of slow framerate
-      for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate) {
+    // Main engine game loop
+    function gameLoop(frameTimeMS=0) {
+        const frameTimeDeltaMS = frameTimeMS - frameTimeLastMS;
+        frameTimeLastMS = frameTimeMS;
+        
+        // show debug panel here
+        // TODO
+        averageFPS = lerp(.05, averageFPS, 1e3/(frameTimeDeltaMS||1));
+
+        //frameTimeBufferMS += frameTimeDeltaMS;
+        frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
+
+        resizeCanvas();
+
+        if (paused) {
+        // TODO: draw menu in overlay canvas
         inputUpdate();
-        _update();
+        updateEngineMenu();
         inputUpdatePost();
-      }
+        }
+        else {
+        // apply time delta smoothing, improves smoothness of framerate in some browsers
+        let deltaSmooth = 0;
+        if (frameTimeBufferMS < 0 && frameTimeBufferMS > -9)
+        {
+            // force at least one update each frame since it is waiting for refresh
+            deltaSmooth = frameTimeBufferMS;
+            frameTimeBufferMS = 0;
+        }
 
-      // add the time smoothing back in
-      frameTimeBufferMS += deltaSmooth;
+        // update game state
+        // update multiple frames if necessary in case of slow framerate
+        for (;frameTimeBufferMS >= 0; frameTimeBufferMS -= 1e3 / frameRate) {
+            inputUpdate();
+            _update();
+            inputUpdatePost();
+        }
+
+        // add the time smoothing back in
+        frameTimeBufferMS += deltaSmooth;
+        }
+
+        _draw();
+        print(`FPS: ${Math.floor(averageFPS)}`, 0, 0);
+        // TODO: remove when there is an overlay canvas
+        if (paused) drawEngineMenu();
+
+        requestAnimationFrame(gameLoop);
     }
+  
+    // Setup the html file
 
-    _draw();
-    print(`FPS: ${Math.floor(averageFPS)}`, 0, 0);
-    // TODO: remove when there is an overlay canvas
-    if (paused) drawEngineMenu();
+    const rootElement = document.body;
+    const styleRoot =
+        'display: flex;' +
+        'flex-direction: column;' +
+        'justify-content: center;' +
+        'align-items: center;' +
+        'image-rendering: optimizeSpeed;' +
+        'image-rendering: -moz-crisp-edges;' +
+        'image-rendering: -o-crisp-edges;' +
+        'image-rendering: -webkit-optimize-contrast;' +
+        'image-rendering: optimize-contrast;' +
+        'image-rendering: pixelated;' +
+        '-ms-interpolation-mode: nearest-neighbor;' +
+        'border: 0px;' +
+        'cursor: none;' +
+        'font-smooth: never;' +
+        '-webkit-font-smoothing : none;';
+    rootElement.style.cssText = styleRoot;
+    mainCanvas = document.createElement('canvas');
+    rootElement.appendChild(mainCanvas);
+    mainContext = mainCanvas.getContext("2d", { alpha: true });
+    mainCanvas.width = cWidth * ratio;
+    mainCanvas.height = cHeight * ratio; 
+    mainCanvas.style.backgroundColor = COLORS[bgColor];
+    mainContext.imageSmoothingEnabled = false;
+    mainContext.scale(ratio,ratio);
+    mainContext.fillStyle = COLORS[6]; // default color
+    mainContext.strokeStyle = COLORS[6]; // default color
+
+    inputInit();
+    drawSprites(sprites);
+
+    window.addEventListener('resize', resizeCanvas);
 
     requestAnimationFrame(gameLoop);
-  }
-  
-  inputInit();
-  drawSprites(sprites);
-  ctx.fillStyle = COLORS[6]; // default color
-  ctx.strokeStyle = COLORS[6]; // default color
-
-  window.addEventListener('resize', resizeCanvas);
-
-  requestAnimationFrame(gameLoop);
 }
