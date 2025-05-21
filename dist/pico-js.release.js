@@ -792,7 +792,7 @@ let mainCanvas;
 
 /** Main canvas context
  * @type {CanvasRenderingContext2D}
- * @memberof Engine */
+ * @memberof Draw */
 let mainContext;
 
 /** Helper function to draw a circle or a filled circle
