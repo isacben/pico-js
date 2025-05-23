@@ -15,9 +15,9 @@ function cls(color=0)
     if (color !== bgColor)
     {
         bgColor = color;
-        canvas.style.backgroundColor = COLORS[bgColor];
+        mainCanvas.style.backgroundColor = COLORS[bgColor];
     }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    mainContext.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
 
 
@@ -39,14 +39,14 @@ function rect(x, y, width, height, color=6)
 
     if (color === 6)
     {
-        ctx.strokeRect(x, y, width, height);
+        mainContext.strokeRect(x, y, width, height);
         return;
     }
 
-    ctx.save();
-    ctx.strokeStyle = COLORS[color];
-    ctx.strokeRect(x, y, width, height);
-    ctx.restore();
+    mainContext.save();
+    mainContext.strokeStyle = COLORS[color];
+    mainContext.strokeRect(x, y, width, height);
+    mainContext.restore();
 }
 
 
@@ -62,14 +62,14 @@ function rect(x, y, width, height, color=6)
 function rectfill(x, y, width, height, color=6)
 {
     if (color === 6) {
-        ctx.fillRect(x, y, width, height);
+        mainContext.fillRect(x, y, width, height);
         return;
     }
 
-    ctx.save();
-    ctx.fillStyle = COLORS[color];
-    ctx.fillRect(x, y, width, height); 
-    ctx.restore();
+    mainContext.save();
+    mainContext.fillStyle = COLORS[color];
+    mainContext.fillRect(x, y, width, height); 
+    mainContext.restore();
 }
 
 
@@ -112,11 +112,11 @@ function line(x0, y0, x1, y1, color=6)
     let sy = (y0 < y1) ? 1 : -1;
     let err = (dx > dy ? dx : -dy) / 2;
 
-    ctx.fillStyle = COLORS[color];
+    mainContext.fillStyle = COLORS[color];
     
     while (true) 
     {
-        ctx.fillRect(x0, y0, 1, 1);
+        mainContext.fillRect(x0, y0, 1, 1);
         if (x0 === x1 && y0 === y1) break;
 
         let e2 = err;
@@ -162,9 +162,9 @@ function spr(n, x, y, w=1, h=1)
     const sWidth = w * 8;              // sWidth of the section of the sprite sheet
     const sHeight = h * 8;             // sHeight of the section of the sprite sheet
 
-    ctx.save();
+    mainContext.save();
 
-    ctx.drawImage(
+    mainContext.drawImage(
         spritesImg, 
         sx,           // sx of the section of the sprite sheet
         sy,           // sy of the section of the sprite sheet
@@ -175,7 +175,7 @@ function spr(n, x, y, w=1, h=1)
         sWidth,       // scaled width of the sprite
         sHeight);     // scaled height of the sprite
 
-    ctx.restore();
+    mainContext.restore();
 }
 
 
@@ -189,9 +189,9 @@ function spr(n, x, y, w=1, h=1)
  *  @memberof Api */
 function print(str, posX, posY, color=6)
 {
-    ctx.save(); 
+    mainContext.save(); 
     if (color !== 6)
-        ctx.fillStyle = COLORS[color];
+        mainContext.fillStyle = COLORS[color];
 
     let needed = [];
     str = str.toUpperCase();
@@ -215,14 +215,14 @@ function print(str, posX, posY, color=6)
             for (let x = 0; x < row.length; x++)
             {
                 if (row[x])
-                ctx.fillRect(posX + currX + x, posY + currY, 1, 1);
+                mainContext.fillRect(posX + currX + x, posY + currY, 1, 1);
             }
             addX = Math.max(addX, row.length);
             currY += 1;
         }
         currX += 1 + addX;
     }
-    ctx.restore();
+    mainContext.restore();
 }
 
 

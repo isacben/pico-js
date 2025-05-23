@@ -6,6 +6,75 @@
 
 'use strict';
 
+/** Size of the tiles
+ * @type {Number}
+ * @default 8
+ * @memberof Draw */
+const TILE_SIZE = 8;
+
+/** The native game canvas width size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Draw */
+const NATIVE_WIDTH = TILE_SIZE * 16;
+
+/** The native game canvas height size in pixels
+ * @type {Number}
+ * @default 128
+ * @memberof Draw */
+const NATIVE_HEIGHT = TILE_SIZE * 16;
+
+/** Canvas virtual width
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+let cWidth = NATIVE_WIDTH;
+
+/** Canvas virtual height
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+let cHeight = NATIVE_HEIGHT; 
+
+/** Max multiplier to control the size of the main canvas
+ * @type {Number}
+ * @default 10
+ * @memberof Draw */
+const maxMultiplier = 10;
+
+/** Max virtual width of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof  Draw */
+const maxWidth = NATIVE_WIDTH * maxMultiplier;
+
+/** Max virtual height of the main canvas
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+const maxHeight = NATIVE_HEIGHT * maxMultiplier;
+
+/** Value to adjust the virtual size of the canvas in the window
+ * @type {Number}
+ * @default 0.9
+ * @memberof Draw */
+const windowPercentage = 0.9;
+
+/** Device pixel ratio
+ * @type {Number}
+ * @default
+ * @memberof Draw */
+const ratio = window.devicePixelRatio || 1;
+
+/** Main Canvas
+ * @type {HTMLCanvasElement}
+ * @memberof Draw */
+let mainCanvas;
+
+/** Main canvas context
+ * @type {CanvasRenderingContext2D}
+ * @memberof Draw */
+let mainContext;
 
 /** Helper function to draw a circle or a filled circle
  *  @param {Number} centerX   - Coordinate x of the center of the circle
@@ -20,7 +89,7 @@ function drawCircle(centerX, centerY, radius, color, filled=false)
     let y = radius;
     let decisionParameter = 1 - radius;
 
-    ctx.fillStyle = color;
+    mainContext.fillStyle = color;
   
     // Plot the initial point
     if (filled)
@@ -74,7 +143,7 @@ function plotCirclePoints(centerX, centerY, x, y)
  *  @param {Number} x - Coordinate x of the pixel
  *  @param {Number} y - Coordinate y of the pixel
  *  @memberof Draw */
-function plotPixel(x, y) { ctx.fillRect(x, y, 1, 1); }
+function plotPixel(x, y) { mainContext.fillRect(x, y, 1, 1); }
 
 
 /** Helper function to plot a horizontal line to draw a filled circle
@@ -85,5 +154,40 @@ function plotPixel(x, y) { ctx.fillRect(x, y, 1, 1); }
 function drawHorizontalLine(x1, x2, y)
 {
     for (let x = x1; x <= x2; x++)
-        ctx.fillRect(x, y, 1, 1);
+        mainContext.fillRect(x, y, 1, 1);
+}
+
+
+/**
+ * Draw the sprites sheet from a secondary canvas
+ * @param {{[key: string]: number[][]}} sprites - Contains the sprites to be used in the game
+ * @memberof Draw */
+function drawSprites(sprites) {
+  const spritesCanvas = document.createElement('canvas');
+  spritesCanvas.width = 128;
+  spritesCanvas.height = 128;
+  let c = spritesCanvas.getContext('2d');
+  
+  let x = 0; 
+  let y = 0;
+  Object.keys(sprites).forEach((key) => {
+    const sprite = sprites[key];
+    let currY = 0;
+
+    x = Math.floor(Number(key) % 16) * 8;
+    y = Math.floor(Number(key) / 16) * 8;
+    for (let row = 0; row < sprite.length; row++) {
+      let currRow = sprite[row];
+      for (let col = 0; col < currRow.length; col++) {
+        if (currRow[col]) {
+          const color = COLORS[sprite[row][col]];
+          c.fillStyle = color;
+          c.fillRect(x + col, y + currY, 1, 1);
+        }
+      }
+      currY += 1;
+    }
+  });
+  c.drawImage(spritesImg, 0, 0, 127, 127);
+  spritesImg.src = spritesCanvas.toDataURL();
 }
