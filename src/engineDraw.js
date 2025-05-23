@@ -156,3 +156,38 @@ function drawHorizontalLine(x1, x2, y)
     for (let x = x1; x <= x2; x++)
         mainContext.fillRect(x, y, 1, 1);
 }
+
+
+/**
+ * Draw the sprites sheet from a secondary canvas
+ * @param {{[key: string]: number[][]}} sprites - Contains the sprites to be used in the game
+ * @memberof Draw */
+function drawSprites(sprites) {
+  const spritesCanvas = document.createElement('canvas');
+  spritesCanvas.width = 128;
+  spritesCanvas.height = 128;
+  let c = spritesCanvas.getContext('2d');
+  
+  let x = 0; 
+  let y = 0;
+  Object.keys(sprites).forEach((key) => {
+    const sprite = sprites[key];
+    let currY = 0;
+
+    x = Math.floor(Number(key) % 16) * 8;
+    y = Math.floor(Number(key) / 16) * 8;
+    for (let row = 0; row < sprite.length; row++) {
+      let currRow = sprite[row];
+      for (let col = 0; col < currRow.length; col++) {
+        if (currRow[col]) {
+          const color = COLORS[sprite[row][col]];
+          c.fillStyle = color;
+          c.fillRect(x + col, y + currY, 1, 1);
+        }
+      }
+      currY += 1;
+    }
+  });
+  c.drawImage(spritesImg, 0, 0, 127, 127);
+  spritesImg.src = spritesCanvas.toDataURL();
+}
