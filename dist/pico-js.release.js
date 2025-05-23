@@ -1365,7 +1365,7 @@ function engineInit(_update, _draw, sprites) {
         }
 
         _draw();
-        print(`FPS: ${Math.floor(averageFPS)}`, 0, 0, 3);
+        print(`FPS: ${Math.floor(averageFPS)}`, 0, 0);
         // TODO: remove when there is an overlay canvas
         if (paused) drawEngineMenu();
 
