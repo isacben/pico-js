@@ -10,16 +10,7 @@ One of PICO-JS goals is also to be a option for the JS13GAMES game jam!
 
 ## We're building :construction:
 
-PICO-JS is currently in early develpment. This is what we are working on:
-
-- [ ] Optimize the canvas
-- [ ] The PICO-JS API
-- [ ] Mouse events
-- [ ] Sound fx and music
-- [ ] Sprites & maps designer
-- [ ] Camera
-- [ ] Maps
-- [ ] Documentation
+PICO-JS is currently in early develpment. See the API section below.
 
 ## Getting started
 
@@ -60,6 +51,46 @@ const sprites = {
     [],
   ],
 };
+```
+
+## API
+
+These is the API currently available in PICO-JS:
+
+```
+// Drawing functions
+cls(color=0)                                    // Clear screen
+rect(x, y, width, height, color=6)              // Draw a rectangle
+rectfill(x, y, width, height, color=6)          // Draw a filled rectangle
+circ(x, y, radius, color=6)                     // Draw a circle
+circfill(x, y, radius, color=6)                 // Draw a filled circle
+line(x0, y0, x1, y1, color=6)                   // Draw a line
+spr(n, x, y, w=1, h=1)                          // Draw a sprite
+print(str, posX, posY, color=6)                 // Print text
+
+// Input functions
+btn(b)                                          // Returns true when a button is pressed
+btnp(b)                                         // Returns true when a button is down and it was not down the last frame
+
+// TODO (* have priority)
+pset
+pget
+sset
+sget
+fset *
+fget *
+color *
+camera *
+oval *
+ovalfill *
+sspr *
+fillp
+sfx *
+music *
+mget *
+mset *
+map *
+tline
 ```
 
 ## Builds
