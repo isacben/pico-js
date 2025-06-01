@@ -90,7 +90,6 @@ let preventDefaultInput = false;
  * @type {HTMLImageElement}
  * @memberof Engine */
 let spritesImg = new Image;
-//rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
 
 function clamp(value, min=0, max=1) { return value < min ? min : value > max ? max : value; }
 function lerp(percent, valueA, valueB) { return valueA + clamp(percent) * (valueB-valueA); }
@@ -112,20 +111,20 @@ function engineInit(_update, _draw, sprites) {
 
         // browser window is too wide
         if (browserWindowRatio > nativeRatio) {
-            cHeight = Math.floor(cHeight * windowPercentage); // optional
-           if (cHeight > maxWidth) cHeight = maxHeight; // optional
+            cHeight = Math.round(cHeight * windowPercentage); // optional
+            //if (cHeight > maxWidth) cHeight = maxHeight; // optional
 
-            cWidth = Math.floor(cHeight * nativeRatio);
+            cWidth = Math.round(cHeight * nativeRatio);
         } else {
         // browser window is too high
-        cWidth = Math.floor(cWidth * windowPercentage); // optional
-        if (cWidth > maxWidth) cWidth = maxWidth; // optional
+        cWidth = Math.round(cWidth * windowPercentage); // optional
+        //if (cWidth > maxWidth) cWidth = maxWidth; // optional
 
-        cHeight = Math.floor(cWidth / nativeRatio);
+        cHeight = Math.round(cWidth / nativeRatio);
         }
 
-        mainContext.canvas.style.width = `${cWidth}px`;
-        mainContext.canvas.style.height = `${cHeight}px`;
+        mainCanvas.style.width = `${cWidth}px`;
+        mainCanvas.style.height = `${cHeight}px`;
 
         //_draw();
         //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
@@ -142,8 +141,6 @@ function engineInit(_update, _draw, sprites) {
 
         //frameTimeBufferMS += frameTimeDeltaMS;
         frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
-
-        resizeCanvas();
 
         if (paused)
         {
@@ -211,12 +208,16 @@ function engineInit(_update, _draw, sprites) {
     mainContext = mainCanvas.getContext("2d", { alpha: true });
     mainContext.fillStyle = COLORS[6]; // default color
     mainContext.strokeStyle = COLORS[6]; // default color
-    mainCanvas.width = cWidth * ratio;
-    mainCanvas.height = cHeight * ratio; 
+
+    mainCanvas.width = Math.round(NATIVE_WIDTH*ratio);
+    mainCanvas.height = Math.round(NATIVE_HEIGHT*ratio); 
+    mainContext.scale(ratio,ratio);
     mainCanvas.style.backgroundColor = COLORS[bgColor];
     mainContext.imageSmoothingEnabled = false;
-    mainContext.scale(ratio,ratio);
 
     window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
     requestAnimationFrame(engineUpdate);
+
+    //rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
 }

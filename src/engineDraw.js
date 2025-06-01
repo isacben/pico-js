@@ -188,6 +188,6 @@ function drawSprites(sprites) {
       currY += 1;
     }
   });
-  c.drawImage(spritesImg, 0, 0, 127, 127);
+  c.drawImage(spritesImg, 0, 0, 128, 128);
   spritesImg.src = spritesCanvas.toDataURL();
 }

@@ -53,66 +53,38 @@ function inputUpdatePost()
 //////////////////////////////////////////////////
 // Input event handlers
 
+const keyMap = {
+    "ArrowLeft": 0,
+    "ArrowRight": 1,
+    "ArrowUp": 2,
+    "ArrowDown": 3,
+    "KeyZ": 4,
+    "KeyX": 5
+  };
+
 function inputInit()
 {
   onkeydown = (e) =>
   {
     if (!e.repeat)
     {
-      switch (e.code)
-      {
-        case "ArrowLeft":
-          buttons[0] = 3;
-          break;
-        case "ArrowRight":
-          buttons[1] = 3;
-          break;
-        case "ArrowUp":
-          buttons[2] = 3;
-          break;
-        case "ArrowDown":
-          buttons[3] = 3;
-          break;
-        case "KeyZ":
-          buttons[4] = 3;
-          break;
-        case "KeyX":
-          buttons[5] = 3;
-          break;
-        case "Enter":
-          handleMenu();
-          break;
-      }
+        if (e.code === "Enter")
+        {
+            handleMenu();
+        }
+        else if (keyMap.hasOwnProperty(e.code))
+        {
+            buttons[keyMap[e.code]] = 3;
+        }
     }
     e.preventDefault();
   }
 
   onkeyup = (e) => {
-    switch (e.code) {
-      case "ArrowLeft":
-        buttons[0] = 4;
-        pressedBtnCounter[0] = 0;
-        break;
-      case "ArrowRight":
-        buttons[1] = 4;
-        pressedBtnCounter[1] = 0;
-        break;
-      case "ArrowUp":
-        buttons[2] = 4;
-        pressedBtnCounter[2] = 0;
-        break;
-      case "ArrowDown":
-        buttons[3] = 4;
-        pressedBtnCounter[3] = 0;
-        break;
-      case "KeyZ":
-        buttons[4] = 4;
-        pressedBtnCounter[4] = 0;
-        break;
-      case "KeyX":
-        buttons[5] = 4;
-        pressedBtnCounter[5] = 0;
-        break;
+    const idx = keyMap[e.code];
+    if (idx !== undefined) {
+      buttons[idx] = 4;
+      pressedBtnCounter[idx] = 0;
     }
   }
 
