@@ -57,66 +57,38 @@ function inputUpdatePost()
 //////////////////////////////////////////////////
 // Input event handlers
 
+const keyMap = {
+    "ArrowLeft": 0,
+    "ArrowRight": 1,
+    "ArrowUp": 2,
+    "ArrowDown": 3,
+    "KeyZ": 4,
+    "KeyX": 5
+  };
+
 function inputInit()
 {
   onkeydown = (e) =>
   {
     if (!e.repeat)
     {
-      switch (e.code)
-      {
-        case "ArrowLeft":
-          buttons[0] = 3;
-          break;
-        case "ArrowRight":
-          buttons[1] = 3;
-          break;
-        case "ArrowUp":
-          buttons[2] = 3;
-          break;
-        case "ArrowDown":
-          buttons[3] = 3;
-          break;
-        case "KeyZ":
-          buttons[4] = 3;
-          break;
-        case "KeyX":
-          buttons[5] = 3;
-          break;
-        case "Enter":
-          handleMenu();
-          break;
-      }
+        if (e.code === "Enter")
+        {
+            handleMenu();
+        }
+        else if (keyMap.hasOwnProperty(e.code))
+        {
+            buttons[keyMap[e.code]] = 3;
+        }
     }
     e.preventDefault();
   }
 
   onkeyup = (e) => {
-    switch (e.code) {
-      case "ArrowLeft":
-        buttons[0] = 4;
-        pressedBtnCounter[0] = 0;
-        break;
-      case "ArrowRight":
-        buttons[1] = 4;
-        pressedBtnCounter[1] = 0;
-        break;
-      case "ArrowUp":
-        buttons[2] = 4;
-        pressedBtnCounter[2] = 0;
-        break;
-      case "ArrowDown":
-        buttons[3] = 4;
-        pressedBtnCounter[3] = 0;
-        break;
-      case "KeyZ":
-        buttons[4] = 4;
-        pressedBtnCounter[4] = 0;
-        break;
-      case "KeyX":
-        buttons[5] = 4;
-        pressedBtnCounter[5] = 0;
-        break;
+    const idx = keyMap[e.code];
+    if (idx !== undefined) {
+      buttons[idx] = 4;
+      pressedBtnCounter[idx] = 0;
     }
   }
 
@@ -907,7 +879,7 @@ function drawSprites(sprites) {
       currY += 1;
     }
   });
-  c.drawImage(spritesImg, 0, 0, 127, 127);
+  c.drawImage(spritesImg, 0, 0, 128, 128);
   spritesImg.src = spritesCanvas.toDataURL();
 }
 /**
@@ -1279,7 +1251,6 @@ let preventDefaultInput = false;
  * @type {HTMLImageElement}
  * @memberof Engine */
 let spritesImg = new Image;
-//rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
 
 function clamp(value, min=0, max=1) { return value < min ? min : value > max ? max : value; }
 function lerp(percent, valueA, valueB) { return valueA + clamp(percent) * (valueB-valueA); }
@@ -1301,20 +1272,20 @@ function engineInit(_update, _draw, sprites) {
 
         // browser window is too wide
         if (browserWindowRatio > nativeRatio) {
-            cHeight = Math.floor(cHeight * windowPercentage); // optional
-           if (cHeight > maxWidth) cHeight = maxHeight; // optional
+            cHeight = Math.round(cHeight * windowPercentage); // optional
+            //if (cHeight > maxWidth) cHeight = maxHeight; // optional
 
-            cWidth = Math.floor(cHeight * nativeRatio);
+            cWidth = Math.round(cHeight * nativeRatio);
         } else {
         // browser window is too high
-        cWidth = Math.floor(cWidth * windowPercentage); // optional
-        if (cWidth > maxWidth) cWidth = maxWidth; // optional
+        cWidth = Math.round(cWidth * windowPercentage); // optional
+        //if (cWidth > maxWidth) cWidth = maxWidth; // optional
 
-        cHeight = Math.floor(cWidth / nativeRatio);
+        cHeight = Math.round(cWidth / nativeRatio);
         }
 
-        mainContext.canvas.style.width = `${cWidth}px`;
-        mainContext.canvas.style.height = `${cHeight}px`;
+        mainCanvas.style.width = `${cWidth}px`;
+        mainCanvas.style.height = `${cHeight}px`;
 
         //_draw();
         //if (engineCurrentState === engineState.PAUSED) drawEngineMenu();
@@ -1331,8 +1302,6 @@ function engineInit(_update, _draw, sprites) {
 
         //frameTimeBufferMS += frameTimeDeltaMS;
         frameTimeBufferMS += paused ? 0 : frameTimeDeltaMS;
-
-        resizeCanvas();
 
         if (paused)
         {
@@ -1400,13 +1369,17 @@ function engineInit(_update, _draw, sprites) {
     mainContext = mainCanvas.getContext("2d", { alpha: true });
     mainContext.fillStyle = COLORS[6]; // default color
     mainContext.strokeStyle = COLORS[6]; // default color
-    mainCanvas.width = cWidth * ratio;
-    mainCanvas.height = cHeight * ratio; 
+
+    mainCanvas.width = Math.round(NATIVE_WIDTH*ratio);
+    mainCanvas.height = Math.round(NATIVE_HEIGHT*ratio); 
+    mainContext.scale(ratio,ratio);
     mainCanvas.style.backgroundColor = COLORS[bgColor];
     mainContext.imageSmoothingEnabled = false;
-    mainContext.scale(ratio,ratio);
 
     window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
     requestAnimationFrame(engineUpdate);
+
+    //rootElement.appendChild(spritesImg); // for debugging, display sprites sheet
 }
 
